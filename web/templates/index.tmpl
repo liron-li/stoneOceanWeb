@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="{{ .HTMLLang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ .Description }}">
+  <title>{{ .Title }}</title>
+  <link rel="canonical" href="{{ .Canonical }}">
+  {{ range .Alternates }}
+  <link rel="alternate" hreflang="{{ .HrefLang }}" href="{{ .Path }}">
+  {{ end }}
+  <link rel="alternate" hreflang="x-default" href="{{ .DefaultURL }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&amp;family=Noto+Sans+SC:wght@400..900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ .HomePath }}" aria-label="{{ call .T "brand.aria" }}">
+        <span class="brand-mark">R</span>
+        <span>RecoverEase</span>
+      </a>
+      <nav class="nav-links" aria-label="{{ call .T "nav.aria" }}">
+        <a href="#formats">{{ call .T "nav.formats" }}</a>
+        <a href="#modes">{{ call .T "nav.modes" }}</a>
+        <a href="#pricing">{{ call .T "nav.pricing" }}</a>
+        <a href="#download">{{ call .T "nav.download" }}</a>
+      </nav>
+      <div class="header-actions">
+        <details class="locale-menu">
+          <summary aria-label="{{ call .T "controls.language" }}">
+            <span class="locale-label">{{ call .T "controls.language" }}</span>
+            <strong>
+              {{ range .Languages }}{{ if .Active }}{{ .Name }}{{ end }}{{ end }}
+            </strong>
+            <span class="locale-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="locale-list" role="listbox">
+            {{ range .Languages }}
+            <a class="locale-option{{ if .Active }} active{{ end }}" href="{{ .Path }}" hreflang="{{ .HrefLang }}" lang="{{ .HTMLLang }}" role="option" aria-selected="{{ .Active }}">{{ .Name }}</a>
+            {{ end }}
+          </div>
+        </details>
+        <button class="theme-toggle" type="button" aria-label="{{ call .T "controls.theme" }}" title="{{ call .T "controls.theme" }}">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
+        <a class="nav-action" href="#download">{{ call .T "cta.freeTrial" }}</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-backdrop" aria-hidden="true"></div>
+      <div class="hero-copy">
+        <p class="eyebrow">{{ call .T "hero.eyebrow" }}</p>
+        <h1>{{ call .T "hero.title" }}</h1>
+        <p class="summary">{{ call .T "hero.subtitle" }}</p>
+        <div class="hero-actions" aria-label="{{ call .T "hero.actions" }}">
+          <a class="button button-primary" href="#download">{{ call .T "cta.freeTrial" }}</a>
+          <a class="button button-secondary" href="{{ .CheckoutPath }}">{{ call .T "cta.buyPro" }}</a>
+        </div>
+        <div class="trust-row" aria-label="{{ call .T "hero.trust" }}">
+          <span>{{ call .T "trust.noUpload" }}</span>
+          <span>{{ call .T "trust.gpu" }}</span>
+        </div>
+      </div>
+
+      <figure class="hero-product" aria-label="{{ call .T "appPreview.aria" }}">
+        <img src="/static/images/demo.png" alt="{{ call .T "appPreview.aria" }}">
+      </figure>
+    </section>
+
+    <section id="formats" class="section">
+      <div class="section-heading">
+        <p class="eyebrow">{{ call .T "formats.eyebrow" }}</p>
+        <h2>{{ call .T "formats.title" }}</h2>
+        <p>{{ call .T "formats.subtitle" }}</p>
+      </div>
+      <div class="format-grid">
+        <article class="feature-card">
+          <span class="card-icon" aria-hidden="true">
+            <img src="/static/images/icon/archive.png" alt="">
+          </span>
+          <h3>{{ call .T "formats.archive.title" }}</h3>
+          <p>{{ call .T "formats.archive.desc" }}</p>
+        </article>
+        <article class="feature-card">
+          <span class="card-icon" aria-hidden="true">
+            <img src="/static/images/icon/office.png" alt="">
+          </span>
+          <h3>{{ call .T "formats.office.title" }}</h3>
+          <p>{{ call .T "formats.office.desc" }}</p>
+        </article>
+        <article class="feature-card">
+          <span class="card-icon" aria-hidden="true">
+            <img src="/static/images/icon/pdf.png" alt="">
+          </span>
+          <h3>{{ call .T "formats.pdf.title" }}</h3>
+          <p>{{ call .T "formats.pdf.desc" }}</p>
+        </article>
+        <article class="feature-card">
+          <span class="card-icon" aria-hidden="true">
+            <img src="/static/images/icon/disk.png" alt="">
+          </span>
+          <h3>{{ call .T "formats.disk.title" }}</h3>
+          <p>{{ call .T "formats.disk.desc" }}</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="modes" class="section muted-section">
+      <div class="section-heading">
+        <p class="eyebrow">{{ call .T "modes.eyebrow" }}</p>
+        <h2>{{ call .T "modes.title" }}</h2>
+        <p>{{ call .T "modes.subtitle" }}</p>
+      </div>
+      <div class="mode-grid">
+        <article class="mode-card">
+          <span class="line-icon">01</span>
+          <h3>{{ call .T "modes.smart.title" }}</h3>
+          <p>{{ call .T "modes.smart.desc" }}</p>
+          <small>{{ call .T "modes.smart.fit" }}</small>
+        </article>
+        <article class="mode-card">
+          <span class="line-icon">02</span>
+          <h3>{{ call .T "modes.advanced.title" }}</h3>
+          <p>{{ call .T "modes.advanced.desc" }}</p>
+          <small>{{ call .T "modes.advanced.fit" }}</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="section split-section">
+      <div>
+        <p class="eyebrow">{{ call .T "advantages.eyebrow" }}</p>
+        <h2>{{ call .T "advantages.title" }}</h2>
+        <p class="section-lead">{{ call .T "advantages.subtitle" }}</p>
+      </div>
+      <div class="advantage-list">
+        <article>
+          <strong>{{ call .T "advantages.gpu.title" }}</strong>
+          <span>{{ call .T "advantages.gpu.desc" }}</span>
+        </article>
+        <article>
+          <strong>{{ call .T "advantages.hints.title" }}</strong>
+          <span>{{ call .T "advantages.hints.desc" }}</span>
+        </article>
+        <article>
+          <strong>{{ call .T "advantages.privacy.title" }}</strong>
+          <span>{{ call .T "advantages.privacy.desc" }}</span>
+        </article>
+        <article>
+          <strong>{{ call .T "advantages.noUpload.title" }}</strong>
+          <span>{{ call .T "advantages.noUpload.desc" }}</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-heading">
+        <p class="eyebrow">{{ call .T "workflow.eyebrow" }}</p>
+        <h2>{{ call .T "workflow.title" }}</h2>
+      </div>
+      <ol class="timeline">
+        <li>
+          <span>1</span>
+          <h3>{{ call .T "workflow.step1.title" }}</h3>
+          <p>{{ call .T "workflow.step1.desc" }}</p>
+        </li>
+        <li>
+          <span>2</span>
+          <h3>{{ call .T "workflow.step2.title" }}</h3>
+          <p>{{ call .T "workflow.step2.desc" }}</p>
+        </li>
+        <li>
+          <span>3</span>
+          <h3>{{ call .T "workflow.step3.title" }}</h3>
+          <p>{{ call .T "workflow.step3.desc" }}</p>
+        </li>
+        <li>
+          <span>4</span>
+          <h3>{{ call .T "workflow.step4.title" }}</h3>
+          <p>{{ call .T "workflow.step4.desc" }}</p>
+        </li>
+      </ol>
+    </section>
+
+    <section id="pricing" class="section muted-section">
+      <div class="section-heading">
+        <p class="eyebrow">{{ call .T "pricing.eyebrow" }}</p>
+        <h2>{{ call .T "pricing.title" }}</h2>
+      </div>
+      <div class="pricing-grid">
+        <article class="price-card">
+          <h3>{{ call .T "pricing.free.title" }}</h3>
+          <p class="price">$0</p>
+          <ul>
+            <li>{{ call .T "pricing.free.item1" }}</li>
+            <li>{{ call .T "pricing.free.item2" }}</li>
+            <li>{{ call .T "pricing.free.item3" }}</li>
+          </ul>
+          <a class="button button-secondary" href="#download">{{ call .T "cta.freeTrial" }}</a>
+        </article>
+        <article class="price-card highlighted">
+          <span class="tag">{{ call .T "labels.bestValue" }}</span>
+          <h3>{{ call .T "pricing.pro.title" }}</h3>
+          <p class="price">$29 <span>{{ call .T "pricing.pro.note" }}</span></p>
+          <ul>
+            <li>{{ call .T "pricing.pro.item1" }}</li>
+            <li>{{ call .T "pricing.pro.item2" }}</li>
+            <li>{{ call .T "pricing.pro.item3" }}</li>
+            <li>{{ call .T "pricing.pro.item4" }}</li>
+            <li>{{ call .T "pricing.pro.item5" }}</li>
+          </ul>
+          <a class="button button-primary" href="{{ .CheckoutPath }}">{{ call .T "cta.buyPro" }}</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="section faq-section">
+      <div class="section-heading">
+        <p class="eyebrow">{{ call .T "faq.eyebrow" }}</p>
+        <h2>{{ call .T "faq.title" }}</h2>
+      </div>
+      <div class="faq-list">
+        <details open>
+          <summary>{{ call .T "faq.allPasswords.q" }}</summary>
+          <p>{{ call .T "faq.allPasswords.a" }}</p>
+        </details>
+        <details>
+          <summary>{{ call .T "faq.duration.q" }}</summary>
+          <p>{{ call .T "faq.duration.a" }}</p>
+        </details>
+        <details>
+          <summary>{{ call .T "faq.local.q" }}</summary>
+          <p>{{ call .T "faq.local.a" }}</p>
+        </details>
+        <details>
+          <summary>{{ call .T "faq.internet.q" }}</summary>
+          <p>{{ call .T "faq.internet.a" }}</p>
+        </details>
+        <details>
+          <summary>{{ call .T "faq.safety.q" }}</summary>
+          <p>{{ call .T "faq.safety.a" }}</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="download" class="download-section">
+      <div>
+        <p class="eyebrow">{{ call .T "download.eyebrow" }}</p>
+        <h2>{{ call .T "download.title" }}</h2>
+        <p>{{ call .T "download.subtitle" }}</p>
+      </div>
+      <div class="download-actions">
+        <a class="button button-primary" href="#">{{ call .T "download.windows" }}</a>
+        <a class="button button-secondary disabled" aria-disabled="true">{{ call .T "download.mac" }}</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>{{ call .T "footer.copyright" }}</span>
+    <nav aria-label="{{ call .T "footer.aria" }}">
+      <a href="#">{{ call .T "footer.privacy" }}</a>
+      <a href="#">{{ call .T "footer.terms" }}</a>
+      <a href="mailto:support@recoverease.com">{{ call .T "footer.contact" }}</a>
+    </nav>
+  </footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

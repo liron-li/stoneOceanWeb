@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="{{ .HTMLLang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ .Description }}">
+  <title>{{ .Title }}</title>
+  <link rel="canonical" href="{{ .Canonical }}">
+  {{ range .Alternates }}
+  <link rel="alternate" hreflang="{{ .HrefLang }}" href="{{ .Path }}">
+  {{ end }}
+  <link rel="alternate" hreflang="x-default" href="{{ .DefaultURL }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&amp;family=Noto+Sans+SC:wght@400..900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ .HomePath }}" aria-label="{{ call .T "brand.aria" }}">
+        <span class="brand-mark">R</span>
+        <span>RecoverEase</span>
+      </a>
+      <nav class="nav-links checkout-nav" aria-label="{{ call .T "nav.aria" }}">
+        <a href="{{ .HomePath }}">{{ call .T "checkout.backHome" }}</a>
+      </nav>
+      <div class="header-actions">
+        <details class="locale-menu">
+          <summary aria-label="{{ call .T "controls.language" }}">
+            <span class="locale-label">{{ call .T "controls.language" }}</span>
+            <strong>
+              {{ range .Languages }}{{ if .Active }}{{ .Name }}{{ end }}{{ end }}
+            </strong>
+            <span class="locale-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="locale-list" role="listbox">
+            {{ range .Languages }}
+            <a class="locale-option{{ if .Active }} active{{ end }}" href="{{ .Path }}" hreflang="{{ .HrefLang }}" lang="{{ .HTMLLang }}" role="option" aria-selected="{{ .Active }}">{{ .Name }}</a>
+            {{ end }}
+          </div>
+        </details>
+        <button class="theme-toggle" type="button" aria-label="{{ call .T "controls.theme" }}" title="{{ call .T "controls.theme" }}">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-page">
+    <section class="checkout-hero">
+      <p class="eyebrow">{{ call .T "checkout.eyebrow" }}</p>
+      <h1>{{ call .T "checkout.title" }}</h1>
+      <p>{{ call .T "checkout.subtitle" }}</p>
+    </section>
+
+    <section class="checkout-layout" aria-label="{{ call .T "checkout.aria" }}">
+      <form class="checkout-panel" action="#" method="post">
+        <section class="checkout-card">
+          <div class="checkout-card-heading">
+            <span class="checkout-step">1</span>
+            <div>
+              <h2>{{ call .T "checkout.account.title" }}</h2>
+              <p>{{ call .T "checkout.account.desc" }}</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span>{{ call .T "checkout.email" }}</span>
+              <input type="email" name="email" autocomplete="email" placeholder="you@example.com">
+            </label>
+            <label class="field">
+              <span>{{ call .T "checkout.name" }}</span>
+              <input type="text" name="name" autocomplete="name" placeholder="Alex Chen">
+            </label>
+          </div>
+        </section>
+
+        <section class="checkout-card">
+          <div class="checkout-card-heading">
+            <span class="checkout-step">2</span>
+            <div>
+              <h2>{{ call .T "checkout.payment.title" }}</h2>
+              <p>{{ call .T "checkout.payment.desc" }}</p>
+            </div>
+          </div>
+          <div class="payment-methods" role="radiogroup" aria-label="{{ call .T "checkout.payment.title" }}">
+            <label class="payment-option">
+              <input type="radio" name="payment" checked>
+              <span>{{ call .T "checkout.payment.card" }}</span>
+            </label>
+            <label class="payment-option">
+              <input type="radio" name="payment">
+              <span>PayPal</span>
+            </label>
+          </div>
+          <div class="field-grid">
+            <label class="field field-wide">
+              <span>{{ call .T "checkout.cardNumber" }}</span>
+              <input type="text" name="card-number" inputmode="numeric" autocomplete="cc-number" placeholder="1234 1234 1234 1234">
+            </label>
+            <label class="field">
+              <span>{{ call .T "checkout.expiry" }}</span>
+              <input type="text" name="expiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY">
+            </label>
+            <label class="field">
+              <span>{{ call .T "checkout.cvc" }}</span>
+              <input type="text" name="cvc" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC">
+            </label>
+          </div>
+        </section>
+
+        <section class="checkout-card">
+          <div class="checkout-card-heading">
+            <span class="checkout-step">3</span>
+            <div>
+              <h2>{{ call .T "checkout.billing.title" }}</h2>
+              <p>{{ call .T "checkout.billing.desc" }}</p>
+            </div>
+          </div>
+          <div class="field-grid">
+            <label class="field">
+              <span>{{ call .T "checkout.country" }}</span>
+              <select name="country">
+                <option>{{ call .T "checkout.country.us" }}</option>
+                <option>{{ call .T "checkout.country.cn" }}</option>
+                <option>{{ call .T "checkout.country.eu" }}</option>
+                <option>{{ call .T "checkout.country.other" }}</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>{{ call .T "checkout.coupon" }}</span>
+              <input type="text" name="coupon" placeholder="{{ call .T "checkout.coupon.placeholder" }}">
+            </label>
+          </div>
+        </section>
+      </form>
+
+      <aside class="order-summary" aria-label="{{ call .T "checkout.summary.title" }}">
+        <div class="summary-card">
+          <span class="tag">{{ call .T "labels.bestValue" }}</span>
+          <h2>{{ call .T "checkout.summary.title" }}</h2>
+          <div class="product-line">
+            <div>
+              <strong>RecoverEase Pro</strong>
+              <span>{{ call .T "checkout.summary.license" }}</span>
+            </div>
+            <strong>$29</strong>
+          </div>
+          <dl class="total-list">
+            <div>
+              <dt>{{ call .T "checkout.summary.subtotal" }}</dt>
+              <dd>$29.00</dd>
+            </div>
+            <div>
+              <dt>{{ call .T "checkout.summary.tax" }}</dt>
+              <dd>{{ call .T "checkout.summary.taxValue" }}</dd>
+            </div>
+            <div class="total-row">
+              <dt>{{ call .T "checkout.summary.total" }}</dt>
+              <dd>$29.00</dd>
+            </div>
+          </dl>
+          <button class="button button-primary checkout-submit" type="button">{{ call .T "checkout.pay" }}</button>
+          <p class="checkout-note">{{ call .T "checkout.terms" }}</p>
+        </div>
+
+        <div class="checkout-assurance">
+          <article>
+            <strong>{{ call .T "checkout.assurance.delivery.title" }}</strong>
+            <span>{{ call .T "checkout.assurance.delivery.desc" }}</span>
+          </article>
+          <article>
+            <strong>{{ call .T "checkout.assurance.privacy.title" }}</strong>
+            <span>{{ call .T "checkout.assurance.privacy.desc" }}</span>
+          </article>
+          <article>
+            <strong>{{ call .T "checkout.assurance.secure.title" }}</strong>
+            <span>{{ call .T "checkout.assurance.secure.desc" }}</span>
+          </article>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

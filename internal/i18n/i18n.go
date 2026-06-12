@@ -1,0 +1,587 @@
+package i18n
+
+import (
+	"strconv"
+	"strings"
+)
+
+const DefaultLocale = "en"
+
+type Language struct {
+	Code     string
+	Name     string
+	HTMLLang string
+	HrefLang string
+	Path     string
+	Active   bool
+}
+
+var languageDefinitions = []Language{
+	{Code: "zh", Name: "中文", HTMLLang: "zh-CN", HrefLang: "zh-CN", Path: "/zh"},
+	{Code: "en", Name: "English", HTMLLang: "en", HrefLang: "en", Path: "/en"},
+	{Code: "ja", Name: "日本語", HTMLLang: "ja", HrefLang: "ja", Path: "/ja"},
+	{Code: "ko", Name: "한국어", HTMLLang: "ko", HrefLang: "ko", Path: "/ko"},
+	{Code: "de", Name: "Deutsch", HTMLLang: "de", HrefLang: "de", Path: "/de"},
+	{Code: "fr", Name: "Français", HTMLLang: "fr", HrefLang: "fr", Path: "/fr"},
+	{Code: "es", Name: "Español", HTMLLang: "es", HrefLang: "es", Path: "/es"},
+	{Code: "pt", Name: "Português", HTMLLang: "pt", HrefLang: "pt", Path: "/pt"},
+	{Code: "ru", Name: "Русский", HTMLLang: "ru", HrefLang: "ru", Path: "/ru"},
+}
+
+var en = map[string]string{
+	"meta.title":                "RecoverEase - Password Recovery Software",
+	"meta.description":          "RecoverEase helps you regain access to password-protected archives, documents, and encrypted drives.",
+	"brand.aria":                "RecoverEase home",
+	"nav.aria":                  "Main navigation",
+	"nav.formats":               "Formats",
+	"nav.modes":                 "Modes",
+	"nav.pricing":               "Pricing",
+	"nav.download":              "Download",
+	"controls.language":         "Language",
+	"controls.theme":            "Switch to dark theme",
+	"cta.freeTrial":             "Free Trial",
+	"cta.buyPro":                "Buy Pro",
+	"hero.eyebrow":              "Password Recovery Software",
+	"hero.title":                "Regain Access to Encrypted Files",
+	"hero.subtitle":             "RecoverEase helps you regain access to password-protected archives, documents, and encrypted drives.",
+	"hero.actions":              "Primary actions",
+	"hero.trust":                "Product highlights",
+	"trust.offline":             "Offline processing",
+	"trust.noUpload":            "No file uploads",
+	"trust.gpu":                 "GPU acceleration",
+	"appPreview.aria":           "RecoverEase software interface preview",
+	"app.nav.recovery":          "Recovery",
+	"app.nav.files":             "Files",
+	"app.nav.hints":             "Hints",
+	"app.nav.reports":           "Reports",
+	"app.currentTask":           "Current task",
+	"app.archiveRecovery":       "Archive recovery",
+	"app.smartMode":             "Smart Mode",
+	"app.encryptedDetected":     "Encrypted archive detected",
+	"app.passwordHints":         "Password hints",
+	"app.hintSummer":            "summer",
+	"app.hintYear":              "2024",
+	"app.hintCompany":           "company",
+	"app.gpuSpeed":              "GPU speed",
+	"app.local":                 "Local",
+	"app.privacyMode":           "Privacy mode",
+	"formats.eyebrow":           "Supported Formats",
+	"formats.title":             "Support for Common Encrypted Files and Disk Containers",
+	"formats.subtitle":          "From home backups to business archives, RecoverEase handles protected files through one clear workflow.",
+	"formats.archive.title":     "Archives",
+	"formats.archive.desc":      "Recover access to common RAR, ZIP, and 7Z archive scenarios.",
+	"formats.office.title":      "Office Documents",
+	"formats.office.desc":       "Work with password-protected Microsoft Word, Excel, and PowerPoint files.",
+	"formats.pdf.title":         "PDF Files",
+	"formats.pdf.desc":          "Recover PDF open passwords and regain access to important documents.",
+	"formats.disk.title":        "Disk Encryption",
+	"formats.disk.desc":         "Professional recovery tasks for BitLocker and VeraCrypt containers.",
+	"modes.eyebrow":             "Recovery Modes",
+	"modes.title":               "From Quick Attempts to Expert Strategies",
+	"modes.subtitle":            "Choose the right recovery method based on password hints, file type, and time budget.",
+	"modes.quick.title":         "Quick Recovery",
+	"modes.quick.desc":          "Try common passwords and lightweight rules first.",
+	"modes.quick.fit":           "Best for: home users and recently forgotten passwords",
+	"modes.smart.title":         "Smart Recovery",
+	"modes.smart.desc":          "Automatically builds a strategy from file signals, password libraries, and your hints.",
+	"modes.smart.fit":           "Best for: most recovery tasks",
+	"modes.deep.title":          "Deep Recovery",
+	"modes.deep.desc":           "Expands the search scope for complex passwords or limited clues.",
+	"modes.deep.fit":            "Best for: business archives and long-forgotten passwords",
+	"modes.expert.title":        "Expert Recovery",
+	"modes.expert.desc":         "Customize length, character sets, rules, and task queues.",
+	"modes.expert.fit":          "Best for: IT professionals",
+	"labels.recommended":        "Recommended",
+	"labels.bestValue":          "Best Value",
+	"advantages.eyebrow":        "Advantages",
+	"advantages.title":          "Professional, Trustworthy, and Privacy-Focused",
+	"advantages.subtitle":       "RecoverEase focuses on local recovery workflows for personal files, small business assets, and IT support.",
+	"advantages.gpu.title":      "GPU Acceleration",
+	"advantages.gpu.desc":       "Use your local graphics card to improve recovery speed.",
+	"advantages.hints.title":    "Smart Password Hints",
+	"advantages.hints.desc":     "Turn names, dates, keywords, and patterns into candidate strategies.",
+	"advantages.offline.title":  "Offline Processing",
+	"advantages.offline.desc":   "Core recovery tasks run locally without cloud queues.",
+	"advantages.privacy.title":  "Privacy First",
+	"advantages.privacy.desc":   "Sensitive files are not uploaded, and the task process stays under your control.",
+	"advantages.noUpload.title": "No File Uploads",
+	"advantages.noUpload.desc":  "Your files remain on your computer at all times.",
+	"workflow.eyebrow":          "Workflow",
+	"workflow.title":            "Start Recovery in Four Steps",
+	"workflow.step1.title":      "Choose a File",
+	"workflow.step1.desc":       "Add an archive, document, or encrypted container that needs recovery.",
+	"workflow.step2.title":      "Pick a Mode",
+	"workflow.step2.desc":       "Choose quick, smart, deep, or expert strategy for the task.",
+	"workflow.step3.title":      "Add Hints",
+	"workflow.step3.desc":       "Enter likely names, dates, phrases, or password patterns.",
+	"workflow.step4.title":      "Start Recovery",
+	"workflow.step4.desc":       "Track real-time progress, speed, and results.",
+	"pricing.eyebrow":           "Pricing",
+	"pricing.title":             "Simple, Transparent Licensing",
+	"pricing.free.title":        "Free",
+	"pricing.free.item1":        "File analysis",
+	"pricing.free.item2":        "Quick recovery",
+	"pricing.free.item3":        "Common password dictionary",
+	"pricing.pro.title":         "Pro",
+	"pricing.pro.note":          "one-time lifetime license",
+	"pricing.pro.item1":         "Unlimited recovery",
+	"pricing.pro.item2":         "Deep recovery",
+	"pricing.pro.item3":         "GPU acceleration",
+	"pricing.pro.item4":         "Batch tasks",
+	"pricing.pro.item5":         "Priority support",
+	"faq.eyebrow":               "FAQ",
+	"faq.title":                 "Frequently Asked Questions",
+	"faq.allPasswords.q":        "Can every password be recovered?",
+	"faq.allPasswords.a":        "No. Results depend on password complexity, available hints, file type, and the amount of compute time you can spend.",
+	"faq.duration.q":            "How long does recovery take?",
+	"faq.duration.a":            "Simple passwords may take minutes. Complex passwords can require hours, days, or longer.",
+	"faq.local.q":               "Will my files leave my computer?",
+	"faq.local.a":               "No. RecoverEase is built around local processing, so recovery tasks run on your computer.",
+	"faq.internet.q":            "Is an internet connection required?",
+	"faq.internet.a":            "The recovery process does not depend on the internet. Connectivity is only used for updates, license activation, or support.",
+	"faq.safety.q":              "Is my data safe?",
+	"faq.safety.a":              "The software does not upload your files, and sensitive recovery tasks can run in an offline environment.",
+	"download.eyebrow":          "Download",
+	"download.title":            "Start Regaining Access to Your Files",
+	"download.subtitle":         "A modern password recovery tool for home users, small businesses, and IT professionals.",
+	"download.windows":          "Download for Windows",
+	"download.mac":              "Mac Coming Soon",
+	"footer.copyright":          "© 2026 RecoverEase",
+	"footer.aria":               "Footer navigation",
+	"footer.privacy":            "Privacy Policy",
+	"footer.terms":              "Terms of Service",
+	"footer.contact":            "Contact Us",
+}
+
+var translations = map[string]map[string]string{
+	"en": en,
+	"zh": merge(en, map[string]string{
+		"meta.title": "RecoverEase - 密码恢复软件", "meta.description": "RecoverEase 帮助用户找回受密码保护的压缩包、文档和加密硬盘访问权限。", "brand.aria": "RecoverEase 首页", "nav.aria": "主导航", "nav.formats": "支持格式", "nav.modes": "恢复模式", "nav.pricing": "定价", "nav.download": "下载", "controls.language": "语言", "controls.theme": "切换暗色主题", "cta.freeTrial": "免费试用", "cta.buyPro": "购买专业版", "hero.eyebrow": "密码恢复软件", "hero.title": "找回加密文件访问权限", "hero.subtitle": "RecoverEase 帮助您重新获得对受密码保护的压缩包、文档和加密硬盘的访问。", "hero.actions": "主要操作", "hero.trust": "产品特点", "trust.offline": "离线处理", "trust.noUpload": "不上传文件", "trust.gpu": "GPU 加速", "appPreview.aria": "RecoverEase 软件界面预览", "app.nav.recovery": "恢复", "app.nav.files": "文件", "app.nav.hints": "线索", "app.nav.reports": "报告", "app.currentTask": "当前任务", "app.archiveRecovery": "压缩包恢复", "app.smartMode": "智能模式", "app.encryptedDetected": "检测到加密压缩包", "app.passwordHints": "密码线索", "app.hintSummer": "夏天", "app.hintYear": "2024", "app.hintCompany": "公司", "app.gpuSpeed": "GPU 速度", "app.local": "本地", "app.privacyMode": "隐私模式", "formats.eyebrow": "支持格式", "formats.title": "覆盖常见加密文件与磁盘容器", "formats.subtitle": "从家庭备份到企业资料归档，RecoverEase 用统一流程处理不同类型的受保护文件。", "formats.archive.title": "压缩文件", "formats.archive.desc": "支持 RAR、ZIP、7Z 等常见压缩包恢复场景。", "formats.office.title": "Office 文档", "formats.office.desc": "处理 Microsoft Word、Excel、PowerPoint 受密码保护文件。", "formats.pdf.title": "PDF 文件", "formats.pdf.desc": "帮助找回 PDF 打开密码，恢复重要资料访问权限。", "formats.disk.title": "磁盘加密", "formats.disk.desc": "面向 BitLocker 与 VeraCrypt 容器的专业恢复任务。", "modes.eyebrow": "恢复模式", "modes.title": "从简单尝试到专家级策略", "modes.subtitle": "根据您掌握的密码线索、文件类型和时间预算，选择合适的恢复方式。", "modes.quick.title": "快速恢复", "modes.quick.desc": "使用常见密码和轻量规则快速尝试。", "modes.quick.fit": "适合：家庭用户、刚忘记的密码", "modes.smart.title": "智能恢复", "modes.smart.desc": "结合文件特征、常用密码库和您提供的线索自动生成策略。", "modes.smart.fit": "适合：大多数恢复任务", "modes.deep.title": "深度恢复", "modes.deep.desc": "扩大搜索范围，适合密码复杂、线索较少的情况。", "modes.deep.fit": "适合：企业归档、长期遗忘密码", "modes.expert.title": "高级/专家模式", "modes.expert.desc": "自定义长度、字符集、规则和任务队列。", "modes.expert.fit": "适合：IT 专业人士", "labels.recommended": "推荐", "labels.bestValue": "最优选择", "advantages.eyebrow": "软件优势", "advantages.title": "专业可信，同时尊重隐私", "advantages.subtitle": "RecoverEase 专注本地恢复流程，适合个人文件、小型企业资产和 IT 支持场景。", "advantages.gpu.title": "GPU 高速加速", "advantages.gpu.desc": "充分利用本机显卡提升恢复速度。", "advantages.hints.title": "智能密码线索", "advantages.hints.desc": "把姓名、日期、关键词等线索转化为候选策略。", "advantages.offline.title": "离线处理", "advantages.offline.desc": "核心恢复任务在本机完成，无需云端排队。", "advantages.privacy.title": "注重隐私", "advantages.privacy.desc": "敏感文件不上传，任务过程更可控。", "advantages.noUpload.title": "不上传文件", "advantages.noUpload.desc": "文件始终保留在您的电脑中。", "workflow.eyebrow": "恢复流程", "workflow.title": "四步开始恢复", "workflow.step1.title": "选择文件", "workflow.step1.desc": "添加需要恢复访问权限的压缩包、文档或加密容器。", "workflow.step2.title": "选择恢复模式", "workflow.step2.desc": "从快速、智能、深度或专家模式中选择任务策略。", "workflow.step3.title": "添加密码线索", "workflow.step3.desc": "输入可能出现的姓名、日期、词组或格式规律。", "workflow.step4.title": "开始恢复", "workflow.step4.desc": "查看实时进度、速度和任务结果。", "pricing.eyebrow": "定价", "pricing.title": "简单透明的授权方案", "pricing.free.title": "免费版", "pricing.free.item1": "文件分析", "pricing.free.item2": "快速恢复", "pricing.free.item3": "常用密码字典", "pricing.pro.title": "专业版", "pricing.pro.note": "一次性永久授权", "pricing.pro.item1": "无限恢复", "pricing.pro.item2": "深度恢复", "pricing.pro.item3": "GPU 加速", "pricing.pro.item4": "批量任务", "pricing.pro.item5": "优先客服支持", "faq.eyebrow": "常见问题", "faq.title": "常见问题", "faq.allPasswords.q": "所有密码都能找回吗？", "faq.allPasswords.a": "不能保证。恢复结果取决于密码复杂度、可用线索、文件类型和可投入的计算时间。", "faq.duration.q": "破解需要多久？", "faq.duration.a": "简单密码可能几分钟内完成，复杂密码可能需要数小时、数天甚至更久。", "faq.local.q": "文件会离开我的电脑吗？", "faq.local.a": "不会。RecoverEase 以本地处理为核心，恢复任务在您的电脑上运行。", "faq.internet.q": "需要联网吗？", "faq.internet.a": "恢复过程不依赖联网。联网只用于下载更新、激活授权或联系客服。", "faq.safety.q": "数据安全吗？", "faq.safety.a": "软件不上传您的文件，您可以在离线环境中执行敏感恢复任务。", "download.eyebrow": "下载", "download.title": "开始恢复您的文件访问权限", "download.subtitle": "适用于家庭用户、小型企业和 IT 专业人士的现代密码恢复工具。", "download.windows": "Windows 下载", "download.mac": "Mac 下载（即将上线）", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "页脚导航", "footer.privacy": "隐私政策", "footer.terms": "服务条款", "footer.contact": "联系我们",
+	}),
+	"ja": merge(en, map[string]string{
+		"meta.title": "RecoverEase - パスワード復元ソフト", "meta.description": "RecoverEase は、パスワード保護された圧縮ファイル、文書、暗号化ドライブへのアクセス回復を支援します。", "brand.aria": "RecoverEase ホーム", "nav.aria": "メインナビゲーション", "nav.formats": "対応形式", "nav.modes": "復元モード", "nav.pricing": "価格", "nav.download": "ダウンロード", "controls.language": "言語", "controls.theme": "ダークテーマに切り替え", "cta.freeTrial": "無料で試す", "cta.buyPro": "Pro を購入", "hero.eyebrow": "パスワード復元ソフト", "hero.title": "暗号化ファイルへのアクセスを取り戻す", "hero.subtitle": "RecoverEase は、パスワード保護された圧縮ファイル、文書、暗号化ドライブへのアクセス回復を支援します。", "hero.actions": "主な操作", "hero.trust": "製品の特長", "trust.offline": "オフライン処理", "trust.noUpload": "ファイルをアップロードしない", "trust.gpu": "GPU 高速化", "appPreview.aria": "RecoverEase ソフトウェア画面プレビュー", "app.nav.recovery": "復元", "app.nav.files": "ファイル", "app.nav.hints": "ヒント", "app.nav.reports": "レポート", "app.currentTask": "現在のタスク", "app.archiveRecovery": "アーカイブ復元", "app.smartMode": "スマートモード", "app.encryptedDetected": "暗号化アーカイブを検出", "app.passwordHints": "パスワードのヒント", "app.hintSummer": "夏", "app.hintYear": "2024", "app.hintCompany": "会社", "app.gpuSpeed": "GPU 速度", "app.local": "ローカル", "app.privacyMode": "プライバシーモード", "formats.eyebrow": "対応形式", "formats.title": "一般的な暗号化ファイルとディスクコンテナに対応", "formats.subtitle": "家庭のバックアップからビジネスアーカイブまで、RecoverEase は保護されたファイルを明確な手順で処理します。", "formats.archive.title": "圧縮ファイル", "formats.archive.desc": "RAR、ZIP、7Z などの一般的な圧縮ファイルに対応します。", "formats.office.title": "Office 文書", "formats.office.desc": "Microsoft Word、Excel、PowerPoint のパスワード保護ファイルを処理します。", "formats.pdf.title": "PDF ファイル", "formats.pdf.desc": "PDF のオープンパスワード回復を支援します。", "formats.disk.title": "ディスク暗号化", "formats.disk.desc": "BitLocker と VeraCrypt コンテナ向けの専門的な復元タスク。", "modes.eyebrow": "復元モード", "modes.title": "簡単な試行から専門的な戦略まで", "modes.subtitle": "パスワードの手がかり、ファイル形式、時間の余裕に合わせて復元方法を選べます。", "modes.quick.title": "クイック復元", "modes.quick.desc": "一般的なパスワードと軽量ルールを先に試します。", "modes.quick.fit": "対象：家庭ユーザー、最近忘れたパスワード", "modes.smart.title": "スマート復元", "modes.smart.desc": "ファイル情報、パスワード辞書、手がかりから戦略を自動作成します。", "modes.smart.fit": "対象：ほとんどの復元タスク", "modes.deep.title": "ディープ復元", "modes.deep.desc": "複雑なパスワードや少ない手がかりに向けて検索範囲を広げます。", "modes.deep.fit": "対象：業務アーカイブ、長期間忘れたパスワード", "modes.expert.title": "エキスパート復元", "modes.expert.desc": "長さ、文字セット、ルール、タスクキューをカスタマイズできます。", "modes.expert.fit": "対象：IT プロフェッショナル", "labels.recommended": "おすすめ", "labels.bestValue": "最適な選択", "advantages.eyebrow": "利点", "advantages.title": "プロ品質、信頼性、プライバシー重視", "advantages.subtitle": "RecoverEase は個人ファイル、小規模ビジネス資産、IT サポート向けのローカル復元に集中します。", "advantages.gpu.title": "GPU 高速化", "advantages.gpu.desc": "ローカル GPU を活用して復元速度を高めます。", "advantages.hints.title": "スマートなパスワードヒント", "advantages.hints.desc": "名前、日付、キーワード、パターンを候補戦略へ変換します。", "advantages.offline.title": "オフライン処理", "advantages.offline.desc": "主要な復元タスクはクラウド待ちなしでローカル実行されます。", "advantages.privacy.title": "プライバシー優先", "advantages.privacy.desc": "機密ファイルはアップロードされず、処理を手元で管理できます。", "advantages.noUpload.title": "ファイルをアップロードしない", "advantages.noUpload.desc": "ファイルは常にお使いのコンピューター上に残ります。", "workflow.eyebrow": "流れ", "workflow.title": "4 ステップで復元開始", "workflow.step1.title": "ファイルを選択", "workflow.step1.desc": "復元したい圧縮ファイル、文書、暗号化コンテナを追加します。", "workflow.step2.title": "モードを選択", "workflow.step2.desc": "クイック、スマート、ディープ、エキスパートから選びます。", "workflow.step3.title": "ヒントを追加", "workflow.step3.desc": "名前、日付、語句、パスワード形式を入力します。", "workflow.step4.title": "復元を開始", "workflow.step4.desc": "進行状況、速度、結果をリアルタイムで確認できます。", "pricing.eyebrow": "価格", "pricing.title": "シンプルで透明なライセンス", "pricing.free.title": "無料版", "pricing.free.item1": "ファイル分析", "pricing.free.item2": "クイック復元", "pricing.free.item3": "一般的なパスワード辞書", "pricing.pro.title": "Pro", "pricing.pro.note": "買い切り永久ライセンス", "pricing.pro.item1": "無制限復元", "pricing.pro.item2": "ディープ復元", "pricing.pro.item3": "GPU 高速化", "pricing.pro.item4": "一括タスク", "pricing.pro.item5": "優先サポート", "faq.eyebrow": "FAQ", "faq.title": "よくある質問", "faq.allPasswords.q": "すべてのパスワードを復元できますか？", "faq.allPasswords.a": "保証はできません。結果はパスワードの複雑さ、手がかり、ファイル形式、計算時間に依存します。", "faq.duration.q": "復元にはどのくらい時間がかかりますか？", "faq.duration.a": "単純なパスワードは数分、複雑なものは数時間、数日、またはそれ以上かかる場合があります。", "faq.local.q": "ファイルはコンピューター外へ送られますか？", "faq.local.a": "いいえ。RecoverEase はローカル処理を中心に設計されています。", "faq.internet.q": "インターネット接続は必要ですか？", "faq.internet.a": "復元処理にインターネットは不要です。更新、ライセンス認証、サポート時のみ使用します。", "faq.safety.q": "データは安全ですか？", "faq.safety.a": "ソフトウェアはファイルをアップロードせず、オフライン環境でも機密タスクを実行できます。", "download.eyebrow": "ダウンロード", "download.title": "ファイルへのアクセス回復を始めましょう", "download.subtitle": "家庭ユーザー、小規模ビジネス、IT プロ向けのモダンなパスワード復元ツール。", "download.windows": "Windows 版をダウンロード", "download.mac": "Mac 版は近日公開", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "フッターナビゲーション", "footer.privacy": "プライバシーポリシー", "footer.terms": "利用規約", "footer.contact": "お問い合わせ",
+	}),
+	"ko": merge(en, map[string]string{
+		"meta.title": "RecoverEase - 비밀번호 복구 소프트웨어", "meta.description": "RecoverEase는 비밀번호로 보호된 압축 파일, 문서, 암호화 드라이브 접근 권한을 되찾도록 돕습니다.", "brand.aria": "RecoverEase 홈", "nav.aria": "기본 탐색", "nav.formats": "지원 형식", "nav.modes": "복구 모드", "nav.pricing": "가격", "nav.download": "다운로드", "controls.language": "언어", "controls.theme": "다크 테마로 전환", "cta.freeTrial": "무료 체험", "cta.buyPro": "Pro 구매", "hero.eyebrow": "비밀번호 복구 소프트웨어", "hero.title": "암호화된 파일 접근 권한 복구", "hero.subtitle": "RecoverEase는 비밀번호로 보호된 압축 파일, 문서, 암호화 드라이브에 다시 접근하도록 돕습니다.", "hero.actions": "주요 작업", "hero.trust": "제품 특징", "trust.offline": "오프라인 처리", "trust.noUpload": "파일 업로드 없음", "trust.gpu": "GPU 가속", "appPreview.aria": "RecoverEase 소프트웨어 화면 미리보기", "app.nav.recovery": "복구", "app.nav.files": "파일", "app.nav.hints": "단서", "app.nav.reports": "보고서", "app.currentTask": "현재 작업", "app.archiveRecovery": "압축 파일 복구", "app.smartMode": "스마트 모드", "app.encryptedDetected": "암호화된 압축 파일 감지됨", "app.passwordHints": "비밀번호 단서", "app.hintSummer": "여름", "app.hintYear": "2024", "app.hintCompany": "회사", "app.gpuSpeed": "GPU 속도", "app.local": "로컬", "app.privacyMode": "개인정보 모드", "formats.eyebrow": "지원 형식", "formats.title": "일반 암호화 파일 및 디스크 컨테이너 지원", "formats.subtitle": "가정용 백업부터 비즈니스 아카이브까지 RecoverEase는 보호된 파일을 명확한 흐름으로 처리합니다.", "formats.archive.title": "압축 파일", "formats.archive.desc": "RAR, ZIP, 7Z 등 일반 압축 파일 복구를 지원합니다.", "formats.office.title": "Office 문서", "formats.office.desc": "Microsoft Word, Excel, PowerPoint 보호 파일을 처리합니다.", "formats.pdf.title": "PDF 파일", "formats.pdf.desc": "PDF 열기 비밀번호 복구를 도와줍니다.", "formats.disk.title": "디스크 암호화", "formats.disk.desc": "BitLocker 및 VeraCrypt 컨테이너용 전문 복구 작업.", "modes.eyebrow": "복구 모드", "modes.title": "빠른 시도부터 전문가 전략까지", "modes.subtitle": "비밀번호 단서, 파일 형식, 시간 예산에 맞는 복구 방법을 선택하세요.", "modes.quick.title": "빠른 복구", "modes.quick.desc": "일반적인 비밀번호와 가벼운 규칙을 먼저 시도합니다.", "modes.quick.fit": "적합: 가정 사용자, 최근 잊어버린 비밀번호", "modes.smart.title": "스마트 복구", "modes.smart.desc": "파일 정보, 비밀번호 사전, 입력한 단서를 바탕으로 전략을 자동 생성합니다.", "modes.smart.fit": "적합: 대부분의 복구 작업", "modes.deep.title": "심층 복구", "modes.deep.desc": "복잡한 비밀번호나 단서가 적은 경우 검색 범위를 넓힙니다.", "modes.deep.fit": "적합: 기업 아카이브, 오래전에 잊은 비밀번호", "modes.expert.title": "전문가 복구", "modes.expert.desc": "길이, 문자 집합, 규칙, 작업 대기열을 사용자 지정합니다.", "modes.expert.fit": "적합: IT 전문가", "labels.recommended": "추천", "labels.bestValue": "최고 가치", "advantages.eyebrow": "장점", "advantages.title": "전문적이고 신뢰할 수 있으며 개인정보 중심", "advantages.subtitle": "RecoverEase는 개인 파일, 소규모 비즈니스 자산, IT 지원을 위한 로컬 복구 흐름에 집중합니다.", "advantages.gpu.title": "GPU 고속 가속", "advantages.gpu.desc": "로컬 그래픽 카드를 활용해 복구 속도를 높입니다.", "advantages.hints.title": "스마트 비밀번호 단서", "advantages.hints.desc": "이름, 날짜, 키워드, 패턴을 후보 전략으로 변환합니다.", "advantages.offline.title": "오프라인 처리", "advantages.offline.desc": "핵심 복구 작업은 클라우드 대기 없이 로컬에서 실행됩니다.", "advantages.privacy.title": "개인정보 우선", "advantages.privacy.desc": "민감한 파일은 업로드되지 않으며 작업 과정을 직접 제어할 수 있습니다.", "advantages.noUpload.title": "파일 업로드 없음", "advantages.noUpload.desc": "파일은 항상 사용자의 컴퓨터에 남아 있습니다.", "workflow.eyebrow": "작업 흐름", "workflow.title": "4단계로 복구 시작", "workflow.step1.title": "파일 선택", "workflow.step1.desc": "복구할 압축 파일, 문서 또는 암호화 컨테이너를 추가합니다.", "workflow.step2.title": "모드 선택", "workflow.step2.desc": "빠른, 스마트, 심층 또는 전문가 전략을 선택합니다.", "workflow.step3.title": "단서 추가", "workflow.step3.desc": "가능한 이름, 날짜, 문구 또는 비밀번호 패턴을 입력합니다.", "workflow.step4.title": "복구 시작", "workflow.step4.desc": "진행률, 속도, 결과를 실시간으로 확인합니다.", "pricing.eyebrow": "가격", "pricing.title": "단순하고 투명한 라이선스", "pricing.free.title": "무료", "pricing.free.item1": "파일 분석", "pricing.free.item2": "빠른 복구", "pricing.free.item3": "일반 비밀번호 사전", "pricing.pro.title": "Pro", "pricing.pro.note": "일회성 평생 라이선스", "pricing.pro.item1": "무제한 복구", "pricing.pro.item2": "심층 복구", "pricing.pro.item3": "GPU 가속", "pricing.pro.item4": "일괄 작업", "pricing.pro.item5": "우선 지원", "faq.eyebrow": "FAQ", "faq.title": "자주 묻는 질문", "faq.allPasswords.q": "모든 비밀번호를 복구할 수 있나요?", "faq.allPasswords.a": "보장할 수 없습니다. 결과는 비밀번호 복잡도, 사용 가능한 단서, 파일 형식, 투입 가능한 계산 시간에 따라 달라집니다.", "faq.duration.q": "복구에는 얼마나 걸리나요?", "faq.duration.a": "간단한 비밀번호는 몇 분, 복잡한 비밀번호는 몇 시간, 며칠 또는 그 이상 걸릴 수 있습니다.", "faq.local.q": "파일이 제 컴퓨터를 떠나나요?", "faq.local.a": "아니요. RecoverEase는 로컬 처리를 중심으로 설계되어 복구 작업이 컴퓨터에서 실행됩니다.", "faq.internet.q": "인터넷 연결이 필요한가요?", "faq.internet.a": "복구 과정은 인터넷에 의존하지 않습니다. 업데이트, 라이선스 활성화, 지원에만 연결이 사용됩니다.", "faq.safety.q": "데이터는 안전한가요?", "faq.safety.a": "소프트웨어는 파일을 업로드하지 않으며 오프라인 환경에서도 민감한 복구 작업을 실행할 수 있습니다.", "download.eyebrow": "다운로드", "download.title": "파일 접근 권한 복구 시작", "download.subtitle": "가정 사용자, 소규모 비즈니스, IT 전문가를 위한 현대적인 비밀번호 복구 도구입니다.", "download.windows": "Windows 다운로드", "download.mac": "Mac 곧 출시", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "푸터 탐색", "footer.privacy": "개인정보 처리방침", "footer.terms": "서비스 약관", "footer.contact": "문의하기",
+	}),
+}
+
+func init() {
+	addLocale("de", map[string]string{
+		"meta.title": "RecoverEase - Passwort-Wiederherstellungssoftware", "meta.description": "RecoverEase hilft beim Wiederzugriff auf passwortgeschützte Archive, Dokumente und verschlüsselte Laufwerke.", "brand.aria": "RecoverEase Startseite", "nav.aria": "Hauptnavigation", "nav.formats": "Formate", "nav.modes": "Modi", "nav.pricing": "Preise", "nav.download": "Download", "controls.language": "Sprache", "controls.theme": "Dunkles Design aktivieren", "cta.freeTrial": "Kostenlos testen", "cta.buyPro": "Pro kaufen", "hero.eyebrow": "Passwort-Wiederherstellungssoftware", "hero.title": "Zugriff auf verschlüsselte Dateien zurückerlangen", "hero.subtitle": "RecoverEase hilft Ihnen, wieder auf passwortgeschützte Archive, Dokumente und verschlüsselte Laufwerke zuzugreifen.", "hero.actions": "Primäre Aktionen", "hero.trust": "Produktmerkmale", "trust.offline": "Offline-Verarbeitung", "trust.noUpload": "Keine Datei-Uploads", "trust.gpu": "GPU-Beschleunigung", "appPreview.aria": "Vorschau der RecoverEase-Oberfläche", "app.nav.recovery": "Wiederherstellung", "app.nav.files": "Dateien", "app.nav.hints": "Hinweise", "app.nav.reports": "Berichte", "app.currentTask": "Aktuelle Aufgabe", "app.archiveRecovery": "Archiv-Wiederherstellung", "app.smartMode": "Smart-Modus", "app.encryptedDetected": "Verschlüsseltes Archiv erkannt", "app.passwordHints": "Passwort-Hinweise", "app.hintSummer": "sommer", "app.hintYear": "2024", "app.hintCompany": "firma", "app.gpuSpeed": "GPU-Geschwindigkeit", "app.local": "Lokal", "app.privacyMode": "Privatsphäre-Modus", "formats.eyebrow": "Unterstützte Formate", "formats.title": "Unterstützung für gängige verschlüsselte Dateien und Container", "formats.subtitle": "Von privaten Backups bis zu Unternehmensarchiven verarbeitet RecoverEase geschützte Dateien in einem klaren Ablauf.", "formats.archive.title": "Archive", "formats.archive.desc": "Unterstützt RAR-, ZIP- und 7Z-Szenarien.", "formats.office.title": "Office-Dokumente", "formats.office.desc": "Verarbeitet geschützte Microsoft Word-, Excel- und PowerPoint-Dateien.", "formats.pdf.title": "PDF-Dateien", "formats.pdf.desc": "Hilft bei der Wiederherstellung von PDF-Öffnungspasswörtern.", "formats.disk.title": "Datenträgerverschlüsselung", "formats.disk.desc": "Professionelle Aufgaben für BitLocker- und VeraCrypt-Container.", "modes.eyebrow": "Wiederherstellungsmodi", "modes.title": "Von schnellen Versuchen bis zu Expertenstrategien", "modes.subtitle": "Wählen Sie die passende Methode nach Hinweisen, Dateityp und Zeitbudget.", "modes.quick.title": "Schnelle Wiederherstellung", "modes.quick.desc": "Testet zuerst häufige Passwörter und leichte Regeln.", "modes.quick.fit": "Geeignet für: private Nutzer und kürzlich vergessene Passwörter", "modes.smart.title": "Intelligente Wiederherstellung", "modes.smart.desc": "Erstellt automatisch eine Strategie aus Dateisignalen, Wörterbüchern und Ihren Hinweisen.", "modes.smart.fit": "Geeignet für: die meisten Aufgaben", "modes.deep.title": "Tiefe Wiederherstellung", "modes.deep.desc": "Erweitert den Suchbereich für komplexe Passwörter oder wenige Hinweise.", "modes.deep.fit": "Geeignet für: Unternehmensarchive und lange vergessene Passwörter", "modes.expert.title": "Expertenmodus", "modes.expert.desc": "Passen Sie Länge, Zeichensätze, Regeln und Aufgabenwarteschlangen an.", "modes.expert.fit": "Geeignet für: IT-Profis", "labels.recommended": "Empfohlen", "labels.bestValue": "Bester Wert", "advantages.eyebrow": "Vorteile", "advantages.title": "Professionell, vertrauenswürdig und datenschutzorientiert", "advantages.subtitle": "RecoverEase konzentriert sich auf lokale Wiederherstellung für persönliche Dateien, kleine Unternehmen und IT-Support.", "advantages.gpu.title": "GPU-Beschleunigung", "advantages.gpu.desc": "Nutzen Sie Ihre lokale Grafikkarte, um die Wiederherstellung zu beschleunigen.", "advantages.hints.title": "Intelligente Passwort-Hinweise", "advantages.hints.desc": "Verwandelt Namen, Daten, Schlüsselwörter und Muster in Kandidatenstrategien.", "advantages.offline.title": "Offline-Verarbeitung", "advantages.offline.desc": "Kernaufgaben laufen lokal ohne Cloud-Warteschlangen.", "advantages.privacy.title": "Datenschutz zuerst", "advantages.privacy.desc": "Sensible Dateien werden nicht hochgeladen und der Prozess bleibt unter Ihrer Kontrolle.", "advantages.noUpload.title": "Keine Datei-Uploads", "advantages.noUpload.desc": "Ihre Dateien bleiben jederzeit auf Ihrem Computer.", "workflow.eyebrow": "Ablauf", "workflow.title": "Wiederherstellung in vier Schritten", "workflow.step1.title": "Datei auswählen", "workflow.step1.desc": "Fügen Sie ein Archiv, Dokument oder einen verschlüsselten Container hinzu.", "workflow.step2.title": "Modus wählen", "workflow.step2.desc": "Wählen Sie eine schnelle, smarte, tiefe oder Expertenstrategie.", "workflow.step3.title": "Hinweise hinzufügen", "workflow.step3.desc": "Geben Sie wahrscheinliche Namen, Daten, Phrasen oder Muster ein.", "workflow.step4.title": "Wiederherstellung starten", "workflow.step4.desc": "Verfolgen Sie Fortschritt, Geschwindigkeit und Ergebnisse in Echtzeit.", "pricing.eyebrow": "Preise", "pricing.title": "Einfache, transparente Lizenzierung", "pricing.free.title": "Kostenlos", "pricing.free.item1": "Dateianalyse", "pricing.free.item2": "Schnelle Wiederherstellung", "pricing.free.item3": "Häufiges Passwort-Wörterbuch", "pricing.pro.title": "Pro", "pricing.pro.note": "einmalige lebenslange Lizenz", "pricing.pro.item1": "Unbegrenzte Wiederherstellung", "pricing.pro.item2": "Tiefe Wiederherstellung", "pricing.pro.item3": "GPU-Beschleunigung", "pricing.pro.item4": "Stapelaufgaben", "pricing.pro.item5": "Priorisierter Support", "faq.eyebrow": "FAQ", "faq.title": "Häufige Fragen", "faq.allPasswords.q": "Kann jedes Passwort wiederhergestellt werden?", "faq.allPasswords.a": "Nein. Das Ergebnis hängt von Komplexität, Hinweisen, Dateityp und verfügbarer Rechenzeit ab.", "faq.duration.q": "Wie lange dauert die Wiederherstellung?", "faq.duration.a": "Einfache Passwörter können Minuten dauern, komplexe Passwörter Stunden, Tage oder länger.", "faq.local.q": "Verlassen meine Dateien den Computer?", "faq.local.a": "Nein. RecoverEase ist auf lokale Verarbeitung ausgelegt.", "faq.internet.q": "Ist Internet erforderlich?", "faq.internet.a": "Die Wiederherstellung benötigt kein Internet. Verbindung wird nur für Updates, Aktivierung oder Support genutzt.", "faq.safety.q": "Sind meine Daten sicher?", "faq.safety.a": "Die Software lädt Ihre Dateien nicht hoch und kann sensible Aufgaben offline ausführen.", "download.eyebrow": "Herunterladen", "download.title": "Beginnen Sie mit der Wiederherstellung Ihres Dateizugriffs", "download.subtitle": "Ein modernes Passwort-Wiederherstellungstool für private Nutzer, kleine Unternehmen und IT-Profis.", "download.windows": "Für Windows herunterladen", "download.mac": "Mac bald verfügbar", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "Fußnavigation", "footer.privacy": "Datenschutz", "footer.terms": "Nutzungsbedingungen", "footer.contact": "Kontakt",
+	})
+	addLocale("fr", map[string]string{
+		"meta.title": "RecoverEase - Logiciel de récupération de mots de passe", "meta.description": "RecoverEase vous aide à retrouver l'accès aux archives, documents et disques chiffrés protégés par mot de passe.", "brand.aria": "Accueil RecoverEase", "nav.aria": "Navigation principale", "nav.formats": "Formats pris en charge", "nav.modes": "Modes", "nav.pricing": "Tarifs", "nav.download": "Télécharger", "controls.language": "Langue", "controls.theme": "Activer le thème sombre", "cta.freeTrial": "Essai gratuit", "cta.buyPro": "Acheter Pro", "hero.eyebrow": "Logiciel de récupération de mots de passe", "hero.title": "Retrouvez l'accès à vos fichiers chiffrés", "hero.subtitle": "RecoverEase vous aide à retrouver l'accès aux archives, documents et disques chiffrés protégés par mot de passe.", "hero.actions": "Actions principales", "hero.trust": "Points forts du produit", "trust.offline": "Traitement hors ligne", "trust.noUpload": "Aucun envoi de fichier", "trust.gpu": "Accélération GPU", "appPreview.aria": "Aperçu de l'interface RecoverEase", "app.nav.recovery": "Récupération", "app.nav.files": "Fichiers", "app.nav.hints": "Indices", "app.nav.reports": "Rapports", "app.currentTask": "Tâche actuelle", "app.archiveRecovery": "Récupération d'archive", "app.smartMode": "Mode intelligent", "app.encryptedDetected": "Archive chiffrée détectée", "app.passwordHints": "Indices de mot de passe", "app.hintSummer": "été", "app.hintYear": "2024", "app.hintCompany": "entreprise", "app.gpuSpeed": "Vitesse GPU", "app.local": "Local", "app.privacyMode": "Mode confidentialité", "formats.eyebrow": "Formats pris en charge", "formats.title": "Prise en charge des fichiers chiffrés et conteneurs courants", "formats.subtitle": "Des sauvegardes personnelles aux archives d'entreprise, RecoverEase traite les fichiers protégés dans un flux clair.", "formats.archive.title": "Archives", "formats.archive.desc": "Prend en charge les scénarios RAR, ZIP et 7Z courants.", "formats.office.title": "Documents Office", "formats.office.desc": "Traite les fichiers Microsoft Word, Excel et PowerPoint protégés.", "formats.pdf.title": "Fichiers PDF", "formats.pdf.desc": "Aide à récupérer les mots de passe d'ouverture PDF.", "formats.disk.title": "Chiffrement de disque", "formats.disk.desc": "Tâches professionnelles pour conteneurs BitLocker et VeraCrypt.", "modes.eyebrow": "Modes de récupération", "modes.title": "Des essais rapides aux stratégies expertes", "modes.subtitle": "Choisissez la bonne méthode selon les indices, le type de fichier et le temps disponible.", "modes.quick.title": "Récupération rapide", "modes.quick.desc": "Essaie d'abord les mots de passe courants et les règles légères.", "modes.quick.fit": "Idéal pour : particuliers et mots de passe récemment oubliés", "modes.smart.title": "Récupération intelligente", "modes.smart.desc": "Crée automatiquement une stratégie à partir du fichier, des dictionnaires et de vos indices.", "modes.smart.fit": "Idéal pour : la plupart des tâches", "modes.deep.title": "Récupération approfondie", "modes.deep.desc": "Élargit la recherche pour les mots de passe complexes ou peu d'indices.", "modes.deep.fit": "Idéal pour : archives d'entreprise et anciens mots de passe", "modes.expert.title": "Mode expert", "modes.expert.desc": "Personnalisez longueur, jeux de caractères, règles et files de tâches.", "modes.expert.fit": "Idéal pour : professionnels IT", "labels.recommended": "Recommandé", "labels.bestValue": "Meilleur choix", "advantages.eyebrow": "Avantages", "advantages.title": "Professionnel, fiable et respectueux de la vie privée", "advantages.subtitle": "RecoverEase se concentre sur la récupération locale pour fichiers personnels, petites entreprises et support IT.", "advantages.gpu.title": "Accélération GPU", "advantages.gpu.desc": "Utilisez votre carte graphique locale pour améliorer la vitesse.", "advantages.hints.title": "Indices intelligents", "advantages.hints.desc": "Transforme noms, dates, mots-clés et modèles en stratégies candidates.", "advantages.offline.title": "Traitement hors ligne", "advantages.offline.desc": "Les tâches principales s'exécutent localement sans file d'attente cloud.", "advantages.privacy.title": "Confidentialité d'abord", "advantages.privacy.desc": "Les fichiers sensibles ne sont pas envoyés et le processus reste sous votre contrôle.", "advantages.noUpload.title": "Aucun envoi de fichier", "advantages.noUpload.desc": "Vos fichiers restent toujours sur votre ordinateur.", "workflow.eyebrow": "Flux", "workflow.title": "Démarrez en quatre étapes", "workflow.step1.title": "Choisir un fichier", "workflow.step1.desc": "Ajoutez une archive, un document ou un conteneur chiffré.", "workflow.step2.title": "Choisir un mode", "workflow.step2.desc": "Choisissez une stratégie rapide, intelligente, approfondie ou experte.", "workflow.step3.title": "Ajouter des indices", "workflow.step3.desc": "Saisissez noms, dates, phrases ou modèles probables.", "workflow.step4.title": "Lancer la récupération", "workflow.step4.desc": "Suivez la progression, la vitesse et les résultats en temps réel.", "pricing.eyebrow": "Tarifs", "pricing.title": "Licence simple et transparente", "pricing.free.title": "Gratuit", "pricing.free.item1": "Analyse de fichier", "pricing.free.item2": "Récupération rapide", "pricing.free.item3": "Dictionnaire courant", "pricing.pro.title": "Pro", "pricing.pro.note": "licence à vie en paiement unique", "pricing.pro.item1": "Récupération illimitée", "pricing.pro.item2": "Récupération approfondie", "pricing.pro.item3": "Accélération GPU", "pricing.pro.item4": "Tâches en lot", "pricing.pro.item5": "Support prioritaire", "faq.eyebrow": "FAQ", "faq.title": "Questions fréquentes", "faq.allPasswords.q": "Tous les mots de passe peuvent-ils être récupérés ?", "faq.allPasswords.a": "Non. Le résultat dépend de la complexité, des indices, du type de fichier et du temps de calcul.", "faq.duration.q": "Combien de temps cela prend-il ?", "faq.duration.a": "Un mot de passe simple peut prendre quelques minutes ; un mot de passe complexe peut prendre des heures, des jours ou plus.", "faq.local.q": "Mes fichiers quittent-ils mon ordinateur ?", "faq.local.a": "Non. RecoverEase est conçu autour du traitement local.", "faq.internet.q": "Internet est-il nécessaire ?", "faq.internet.a": "La récupération ne dépend pas d'Internet. La connexion sert aux mises à jour, à l'activation ou au support.", "faq.safety.q": "Mes données sont-elles sûres ?", "faq.safety.a": "Le logiciel n'envoie pas vos fichiers et peut fonctionner hors ligne.", "download.eyebrow": "Télécharger", "download.title": "Commencez à récupérer l'accès à vos fichiers", "download.subtitle": "Un outil moderne pour particuliers, petites entreprises et professionnels IT.", "download.windows": "Télécharger pour Windows", "download.mac": "Mac bientôt disponible", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "Navigation de pied de page", "footer.privacy": "Politique de confidentialité", "footer.terms": "Conditions d'utilisation", "footer.contact": "Nous contacter",
+	})
+	addLocale("es", map[string]string{
+		"meta.title": "RecoverEase - Software de recuperación de contraseñas", "meta.description": "RecoverEase ayuda a recuperar el acceso a archivos comprimidos, documentos y unidades cifradas protegidos por contraseña.", "brand.aria": "Inicio de RecoverEase", "nav.aria": "Navegación principal", "nav.formats": "Formatos", "nav.modes": "Modos", "nav.pricing": "Precios", "nav.download": "Descargar", "controls.language": "Idioma", "controls.theme": "Cambiar a tema oscuro", "cta.freeTrial": "Prueba gratis", "cta.buyPro": "Comprar Pro", "hero.eyebrow": "Software de recuperación de contraseñas", "hero.title": "Recupera el acceso a archivos cifrados", "hero.subtitle": "RecoverEase te ayuda a volver a acceder a archivos comprimidos, documentos y unidades cifradas protegidos por contraseña.", "hero.actions": "Acciones principales", "hero.trust": "Aspectos del producto", "trust.offline": "Procesamiento sin conexión", "trust.noUpload": "Sin subir archivos", "trust.gpu": "Aceleración GPU", "appPreview.aria": "Vista previa de la interfaz de RecoverEase", "app.nav.recovery": "Recuperación", "app.nav.files": "Archivos", "app.nav.hints": "Pistas", "app.nav.reports": "Informes", "app.currentTask": "Tarea actual", "app.archiveRecovery": "Recuperación de archivo", "app.smartMode": "Modo inteligente", "app.encryptedDetected": "Archivo cifrado detectado", "app.passwordHints": "Pistas de contraseña", "app.hintSummer": "verano", "app.hintYear": "2024", "app.hintCompany": "empresa", "app.gpuSpeed": "Velocidad GPU", "app.local": "Local", "app.privacyMode": "Modo privacidad", "formats.eyebrow": "Formatos compatibles", "formats.title": "Compatible con archivos cifrados y contenedores comunes", "formats.subtitle": "Desde copias domésticas hasta archivos empresariales, RecoverEase procesa archivos protegidos con un flujo claro.", "formats.archive.title": "Archivos comprimidos", "formats.archive.desc": "Compatible con escenarios RAR, ZIP y 7Z.", "formats.office.title": "Documentos Office", "formats.office.desc": "Trabaja con archivos Microsoft Word, Excel y PowerPoint protegidos.", "formats.pdf.title": "Archivos PDF", "formats.pdf.desc": "Ayuda a recuperar contraseñas de apertura de PDF.", "formats.disk.title": "Cifrado de disco", "formats.disk.desc": "Tareas profesionales para contenedores BitLocker y VeraCrypt.", "modes.eyebrow": "Modos de recuperación", "modes.title": "De intentos rápidos a estrategias expertas", "modes.subtitle": "Elige el método adecuado según pistas, tipo de archivo y tiempo disponible.", "modes.quick.title": "Recuperación rápida", "modes.quick.desc": "Prueba primero contraseñas comunes y reglas ligeras.", "modes.quick.fit": "Ideal para: usuarios domésticos y contraseñas olvidadas recientemente", "modes.smart.title": "Recuperación inteligente", "modes.smart.desc": "Crea automáticamente una estrategia a partir del archivo, diccionarios y tus pistas.", "modes.smart.fit": "Ideal para: la mayoría de tareas", "modes.deep.title": "Recuperación profunda", "modes.deep.desc": "Amplía la búsqueda para contraseñas complejas o pocas pistas.", "modes.deep.fit": "Ideal para: archivos empresariales y contraseñas antiguas", "modes.expert.title": "Modo experto", "modes.expert.desc": "Personaliza longitud, conjuntos de caracteres, reglas y colas.", "modes.expert.fit": "Ideal para: profesionales de IT", "labels.recommended": "Recomendado", "labels.bestValue": "Mejor opción", "advantages.eyebrow": "Ventajas", "advantages.title": "Profesional, fiable y centrado en la privacidad", "advantages.subtitle": "RecoverEase se centra en flujos locales para archivos personales, pequeñas empresas y soporte IT.", "advantages.gpu.title": "Aceleración GPU", "advantages.gpu.desc": "Usa tu tarjeta gráfica local para mejorar la velocidad.", "advantages.hints.title": "Pistas inteligentes", "advantages.hints.desc": "Convierte nombres, fechas, palabras clave y patrones en estrategias candidatas.", "advantages.offline.title": "Procesamiento sin conexión", "advantages.offline.desc": "Las tareas principales se ejecutan localmente sin colas en la nube.", "advantages.privacy.title": "Privacidad primero", "advantages.privacy.desc": "Los archivos sensibles no se suben y el proceso queda bajo tu control.", "advantages.noUpload.title": "Sin subir archivos", "advantages.noUpload.desc": "Tus archivos permanecen siempre en tu ordenador.", "workflow.eyebrow": "Flujo", "workflow.title": "Empieza en cuatro pasos", "workflow.step1.title": "Elegir archivo", "workflow.step1.desc": "Añade un archivo comprimido, documento o contenedor cifrado.", "workflow.step2.title": "Elegir modo", "workflow.step2.desc": "Elige estrategia rápida, inteligente, profunda o experta.", "workflow.step3.title": "Añadir pistas", "workflow.step3.desc": "Introduce nombres, fechas, frases o patrones probables.", "workflow.step4.title": "Iniciar recuperación", "workflow.step4.desc": "Sigue progreso, velocidad y resultados en tiempo real.", "pricing.eyebrow": "Precios", "pricing.title": "Licencia simple y transparente", "pricing.free.title": "Gratis", "pricing.free.item1": "Análisis de archivo", "pricing.free.item2": "Recuperación rápida", "pricing.free.item3": "Diccionario común", "pricing.pro.title": "Pro", "pricing.pro.note": "licencia vitalicia de pago único", "pricing.pro.item1": "Recuperación ilimitada", "pricing.pro.item2": "Recuperación profunda", "pricing.pro.item3": "Aceleración GPU", "pricing.pro.item4": "Tareas por lotes", "pricing.pro.item5": "Soporte prioritario", "faq.eyebrow": "FAQ", "faq.title": "Preguntas frecuentes", "faq.allPasswords.q": "¿Se pueden recuperar todas las contraseñas?", "faq.allPasswords.a": "No. El resultado depende de la complejidad, las pistas, el tipo de archivo y el tiempo de cálculo.", "faq.duration.q": "¿Cuánto tarda?", "faq.duration.a": "Una contraseña simple puede tardar minutos; una compleja puede tardar horas, días o más.", "faq.local.q": "¿Mis archivos salen de mi ordenador?", "faq.local.a": "No. RecoverEase está diseñado para procesamiento local.", "faq.internet.q": "¿Se necesita internet?", "faq.internet.a": "La recuperación no depende de internet. La conexión solo se usa para actualizaciones, activación o soporte.", "faq.safety.q": "¿Mis datos están seguros?", "faq.safety.a": "El software no sube tus archivos y puede ejecutar tareas sensibles sin conexión.", "download.eyebrow": "Descargar", "download.title": "Empieza a recuperar el acceso a tus archivos", "download.subtitle": "Una herramienta moderna para usuarios domésticos, pequeñas empresas y profesionales IT.", "download.windows": "Descargar para Windows", "download.mac": "Mac próximamente", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "Navegación de pie de página", "footer.privacy": "Política de privacidad", "footer.terms": "Términos del servicio", "footer.contact": "Contacto",
+	})
+	addLocale("pt", map[string]string{
+		"meta.title": "RecoverEase - Software de recuperação de senhas", "meta.description": "RecoverEase ajuda você a recuperar o acesso a arquivos compactados, documentos e unidades criptografadas protegidos por senha.", "brand.aria": "Página inicial do RecoverEase", "nav.aria": "Navegação principal", "nav.formats": "Formatos", "nav.modes": "Modos", "nav.pricing": "Preços", "nav.download": "Baixar", "controls.language": "Idioma", "controls.theme": "Alternar para tema escuro", "cta.freeTrial": "Teste grátis", "cta.buyPro": "Comprar Pro", "hero.eyebrow": "Software de recuperação de senhas", "hero.title": "Recupere o acesso a arquivos criptografados", "hero.subtitle": "RecoverEase ajuda você a acessar novamente arquivos compactados, documentos e unidades criptografadas protegidos por senha.", "hero.actions": "Ações principais", "hero.trust": "Destaques do produto", "trust.offline": "Processamento offline", "trust.noUpload": "Sem envio de arquivos", "trust.gpu": "Aceleração por GPU", "appPreview.aria": "Prévia da interface do RecoverEase", "app.nav.recovery": "Recuperação", "app.nav.files": "Arquivos", "app.nav.hints": "Pistas", "app.nav.reports": "Relatórios", "app.currentTask": "Tarefa atual", "app.archiveRecovery": "Recuperação de arquivo", "app.smartMode": "Modo inteligente", "app.encryptedDetected": "Arquivo criptografado detectado", "app.passwordHints": "Pistas de senha", "app.hintSummer": "verão", "app.hintYear": "2024", "app.hintCompany": "empresa", "app.gpuSpeed": "Velocidade GPU", "app.local": "Local", "app.privacyMode": "Modo privacidade", "formats.eyebrow": "Formatos compatíveis", "formats.title": "Suporte a arquivos criptografados e contêineres comuns", "formats.subtitle": "De backups domésticos a arquivos empresariais, o RecoverEase processa arquivos protegidos em um fluxo claro.", "formats.archive.title": "Arquivos compactados", "formats.archive.desc": "Compatível com cenários RAR, ZIP e 7Z.", "formats.office.title": "Documentos Office", "formats.office.desc": "Trabalha com arquivos Microsoft Word, Excel e PowerPoint protegidos.", "formats.pdf.title": "Arquivos PDF", "formats.pdf.desc": "Ajuda a recuperar senhas de abertura de PDF.", "formats.disk.title": "Criptografia de disco", "formats.disk.desc": "Tarefas profissionais para contêineres BitLocker e VeraCrypt.", "modes.eyebrow": "Modos de recuperação", "modes.title": "De tentativas rápidas a estratégias avançadas", "modes.subtitle": "Escolha o método certo com base nas pistas, tipo de arquivo e tempo disponível.", "modes.quick.title": "Recuperação rápida", "modes.quick.desc": "Tenta primeiro senhas comuns e regras leves.", "modes.quick.fit": "Ideal para: usuários domésticos e senhas esquecidas recentemente", "modes.smart.title": "Recuperação inteligente", "modes.smart.desc": "Cria automaticamente uma estratégia com sinais do arquivo, dicionários e suas pistas.", "modes.smart.fit": "Ideal para: a maioria das tarefas", "modes.deep.title": "Recuperação profunda", "modes.deep.desc": "Amplia a busca para senhas complexas ou poucas pistas.", "modes.deep.fit": "Ideal para: arquivos empresariais e senhas antigas", "modes.expert.title": "Modo especialista", "modes.expert.desc": "Personalize comprimento, conjuntos de caracteres, regras e filas.", "modes.expert.fit": "Ideal para: profissionais de TI", "labels.recommended": "Recomendado", "labels.bestValue": "Melhor valor", "advantages.eyebrow": "Vantagens", "advantages.title": "Profissional, confiável e focado em privacidade", "advantages.subtitle": "O RecoverEase foca em recuperação local para arquivos pessoais, pequenas empresas e suporte de TI.", "advantages.gpu.title": "Aceleração por GPU", "advantages.gpu.desc": "Use sua placa gráfica local para melhorar a velocidade.", "advantages.hints.title": "Pistas inteligentes", "advantages.hints.desc": "Transforma nomes, datas, palavras-chave e padrões em estratégias candidatas.", "advantages.offline.title": "Processamento offline", "advantages.offline.desc": "As tarefas principais rodam localmente sem filas na nuvem.", "advantages.privacy.title": "Privacidade em primeiro lugar", "advantages.privacy.desc": "Arquivos sensíveis não são enviados e o processo fica sob seu controle.", "advantages.noUpload.title": "Sem envio de arquivos", "advantages.noUpload.desc": "Seus arquivos permanecem sempre no seu computador.", "workflow.eyebrow": "Fluxo", "workflow.title": "Comece em quatro etapas", "workflow.step1.title": "Escolher arquivo", "workflow.step1.desc": "Adicione um arquivo compactado, documento ou contêiner criptografado.", "workflow.step2.title": "Escolher modo", "workflow.step2.desc": "Escolha estratégia rápida, inteligente, profunda ou especialista.", "workflow.step3.title": "Adicionar pistas", "workflow.step3.desc": "Informe nomes, datas, frases ou padrões prováveis.", "workflow.step4.title": "Iniciar recuperação", "workflow.step4.desc": "Acompanhe progresso, velocidade e resultados em tempo real.", "pricing.eyebrow": "Preços", "pricing.title": "Licenciamento simples e transparente", "pricing.free.title": "Grátis", "pricing.free.item1": "Análise de arquivo", "pricing.free.item2": "Recuperação rápida", "pricing.free.item3": "Dicionário comum", "pricing.pro.title": "Pro", "pricing.pro.note": "licença vitalícia em pagamento único", "pricing.pro.item1": "Recuperação ilimitada", "pricing.pro.item2": "Recuperação profunda", "pricing.pro.item3": "Aceleração GPU", "pricing.pro.item4": "Tarefas em lote", "pricing.pro.item5": "Suporte prioritário", "faq.eyebrow": "FAQ", "faq.title": "Perguntas frequentes", "faq.allPasswords.q": "Todas as senhas podem ser recuperadas?", "faq.allPasswords.a": "Não. O resultado depende da complexidade, pistas disponíveis, tipo de arquivo e tempo de computação.", "faq.duration.q": "Quanto tempo leva?", "faq.duration.a": "Senhas simples podem levar minutos; senhas complexas podem levar horas, dias ou mais.", "faq.local.q": "Meus arquivos saem do computador?", "faq.local.a": "Não. O RecoverEase foi criado para processamento local.", "faq.internet.q": "É preciso internet?", "faq.internet.a": "A recuperação não depende da internet. A conexão é usada apenas para atualizações, ativação ou suporte.", "faq.safety.q": "Meus dados estão seguros?", "faq.safety.a": "O software não envia seus arquivos e pode executar tarefas sensíveis offline.", "download.eyebrow": "Baixar", "download.title": "Comece a recuperar o acesso aos seus arquivos", "download.subtitle": "Uma ferramenta moderna para usuários domésticos, pequenas empresas e profissionais de TI.", "download.windows": "Baixar para Windows", "download.mac": "Mac em breve", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "Navegação do rodapé", "footer.privacy": "Política de privacidade", "footer.terms": "Termos de serviço", "footer.contact": "Contato",
+	})
+	addLocale("ru", map[string]string{
+		"meta.title": "RecoverEase - программа для восстановления паролей", "meta.description": "RecoverEase помогает вернуть доступ к архивам, документам и зашифрованным дискам, защищенным паролем.", "brand.aria": "Главная RecoverEase", "nav.aria": "Основная навигация", "nav.formats": "Форматы", "nav.modes": "Режимы", "nav.pricing": "Цены", "nav.download": "Скачать", "controls.language": "Язык", "controls.theme": "Включить темную тему", "cta.freeTrial": "Бесплатная версия", "cta.buyPro": "Купить Pro", "hero.eyebrow": "Программа для восстановления паролей", "hero.title": "Верните доступ к зашифрованным файлам", "hero.subtitle": "RecoverEase помогает снова получить доступ к архивам, документам и зашифрованным дискам, защищенным паролем.", "hero.actions": "Основные действия", "hero.trust": "Преимущества продукта", "trust.offline": "Офлайн-обработка", "trust.noUpload": "Без загрузки файлов", "trust.gpu": "GPU-ускорение", "appPreview.aria": "Предпросмотр интерфейса RecoverEase", "app.nav.recovery": "Восстановление", "app.nav.files": "Файлы", "app.nav.hints": "Подсказки", "app.nav.reports": "Отчеты", "app.currentTask": "Текущая задача", "app.archiveRecovery": "Восстановление архива", "app.smartMode": "Умный режим", "app.encryptedDetected": "Обнаружен зашифрованный архив", "app.passwordHints": "Подсказки пароля", "app.hintSummer": "лето", "app.hintYear": "2024", "app.hintCompany": "компания", "app.gpuSpeed": "Скорость GPU", "app.local": "Локально", "app.privacyMode": "Режим приватности", "formats.eyebrow": "Поддерживаемые форматы", "formats.title": "Поддержка популярных зашифрованных файлов и контейнеров", "formats.subtitle": "От домашних резервных копий до бизнес-архивов RecoverEase обрабатывает защищенные файлы по понятному сценарию.", "formats.archive.title": "Архивы", "formats.archive.desc": "Поддерживаются распространенные сценарии RAR, ZIP и 7Z.", "formats.office.title": "Документы Office", "formats.office.desc": "Работа с защищенными файлами Microsoft Word, Excel и PowerPoint.", "formats.pdf.title": "PDF-файлы", "formats.pdf.desc": "Помогает восстановить пароль открытия PDF.", "formats.disk.title": "Шифрование дисков", "formats.disk.desc": "Профессиональные задачи для контейнеров BitLocker и VeraCrypt.", "modes.eyebrow": "Режимы восстановления", "modes.title": "От быстрых попыток до экспертных стратегий", "modes.subtitle": "Выберите метод по подсказкам, типу файла и доступному времени.", "modes.quick.title": "Быстрое восстановление", "modes.quick.desc": "Сначала проверяет частые пароли и легкие правила.", "modes.quick.fit": "Подходит: домашним пользователям и недавно забытым паролям", "modes.smart.title": "Умное восстановление", "modes.smart.desc": "Автоматически строит стратегию по данным файла, словарям и подсказкам.", "modes.smart.fit": "Подходит: большинству задач", "modes.deep.title": "Глубокое восстановление", "modes.deep.desc": "Расширяет поиск для сложных паролей или малого числа подсказок.", "modes.deep.fit": "Подходит: бизнес-архивам и давно забытым паролям", "modes.expert.title": "Экспертный режим", "modes.expert.desc": "Настройте длину, наборы символов, правила и очереди задач.", "modes.expert.fit": "Подходит: IT-специалистам", "labels.recommended": "Рекомендуется", "labels.bestValue": "Лучший выбор", "advantages.eyebrow": "Преимущества", "advantages.title": "Профессионально, надежно и с уважением к приватности", "advantages.subtitle": "RecoverEase ориентирован на локальное восстановление личных файлов, активов малого бизнеса и IT-поддержки.", "advantages.gpu.title": "GPU-ускорение", "advantages.gpu.desc": "Используйте локальную видеокарту для ускорения восстановления.", "advantages.hints.title": "Умные подсказки пароля", "advantages.hints.desc": "Преобразует имена, даты, ключевые слова и шаблоны в стратегии поиска.", "advantages.offline.title": "Офлайн-обработка", "advantages.offline.desc": "Основные задачи выполняются локально без облачных очередей.", "advantages.privacy.title": "Приватность прежде всего", "advantages.privacy.desc": "Чувствительные файлы не загружаются, а процесс остается под вашим контролем.", "advantages.noUpload.title": "Без загрузки файлов", "advantages.noUpload.desc": "Ваши файлы всегда остаются на вашем компьютере.", "workflow.eyebrow": "Процесс", "workflow.title": "Начните восстановление за четыре шага", "workflow.step1.title": "Выберите файл", "workflow.step1.desc": "Добавьте архив, документ или зашифрованный контейнер.", "workflow.step2.title": "Выберите режим", "workflow.step2.desc": "Выберите быструю, умную, глубокую или экспертную стратегию.", "workflow.step3.title": "Добавьте подсказки", "workflow.step3.desc": "Введите вероятные имена, даты, фразы или шаблоны.", "workflow.step4.title": "Запустите восстановление", "workflow.step4.desc": "Отслеживайте прогресс, скорость и результаты в реальном времени.", "pricing.eyebrow": "Цены", "pricing.title": "Простая и прозрачная лицензия", "pricing.free.title": "Бесплатно", "pricing.free.item1": "Анализ файла", "pricing.free.item2": "Быстрое восстановление", "pricing.free.item3": "Словарь частых паролей", "pricing.pro.title": "Pro", "pricing.pro.note": "пожизненная лицензия одним платежом", "pricing.pro.item1": "Неограниченное восстановление", "pricing.pro.item2": "Глубокое восстановление", "pricing.pro.item3": "GPU-ускорение", "pricing.pro.item4": "Пакетные задачи", "pricing.pro.item5": "Приоритетная поддержка", "faq.eyebrow": "FAQ", "faq.title": "Частые вопросы", "faq.allPasswords.q": "Можно ли восстановить любой пароль?", "faq.allPasswords.a": "Нет. Результат зависит от сложности пароля, подсказок, типа файла и доступного времени вычислений.", "faq.duration.q": "Сколько это занимает?", "faq.duration.a": "Простые пароли могут занять минуты, сложные - часы, дни или дольше.", "faq.local.q": "Покидают ли файлы мой компьютер?", "faq.local.a": "Нет. RecoverEase построен вокруг локальной обработки.", "faq.internet.q": "Нужен ли интернет?", "faq.internet.a": "Восстановление не зависит от интернета. Подключение нужно только для обновлений, активации или поддержки.", "faq.safety.q": "Безопасны ли мои данные?", "faq.safety.a": "Программа не загружает ваши файлы и может выполнять чувствительные задачи офлайн.", "download.eyebrow": "Скачать", "download.title": "Начните возвращать доступ к файлам", "download.subtitle": "Современный инструмент для домашних пользователей, малого бизнеса и IT-специалистов.", "download.windows": "Скачать для Windows", "download.mac": "Mac скоро", "footer.copyright": "© 2026 RecoverEase", "footer.aria": "Навигация в подвале", "footer.privacy": "Политика конфиденциальности", "footer.terms": "Условия использования", "footer.contact": "Связаться с нами",
+	})
+	applyRecoveryModeOverrides()
+	applyDownloadCtaOverrides()
+	applyCheckoutContent()
+}
+
+var recoveryModeOverrides = map[string]map[string]string{
+	"en": {
+		"modes.title":          "Two Recovery Modes, Clear Control",
+		"modes.subtitle":       "Use Smart Recovery for automatic common-password attempts, or Advanced Recovery to define length, character sets, and required strings yourself.",
+		"modes.smart.desc":     "Automatically tries common passwords and practical rules, then uses your hints to prioritize likely candidates.",
+		"modes.smart.fit":      "Best for: most users and first recovery attempts",
+		"modes.advanced.title": "Advanced Recovery",
+		"modes.advanced.desc":  "Set password length, character ranges, included strings, and other constraints to narrow the search.",
+		"modes.advanced.fit":   "Best for: users who know part of the password structure",
+		"workflow.step2.desc":  "Choose Smart Recovery for automatic attempts or Advanced Recovery for custom length and character settings.",
+		"pricing.free.item2":   "Smart Recovery",
+		"pricing.pro.item2":    "Advanced Recovery",
+	},
+	"zh": {
+		"modes.title":          "两种恢复模式，路径更清晰",
+		"modes.subtitle":       "智能恢复会自动尝试常见密码；高级恢复让您自行设置密码长度、字符集和包含字符串等条件。",
+		"modes.smart.desc":     "自动尝试常见密码和实用规则，并结合线索优先测试更可能的候选密码。",
+		"modes.smart.fit":      "适合：大多数用户和首次恢复尝试",
+		"modes.advanced.title": "高级恢复",
+		"modes.advanced.desc":  "自定义密码长度、字符范围、必须包含的字符串等条件，缩小搜索范围。",
+		"modes.advanced.fit":   "适合：知道部分密码结构的用户",
+		"workflow.step2.desc":  "选择智能恢复自动尝试，或使用高级恢复自定义长度、字符集和字符串条件。",
+		"pricing.free.item2":   "智能恢复",
+		"pricing.pro.item2":    "高级恢复",
+	},
+	"ja": {
+		"modes.title":          "2つの復旧モードで迷わず開始",
+		"modes.subtitle":       "スマート復旧は一般的なパスワードを自動で試行し、高度な復旧では長さ、文字種、含める文字列を自分で設定できます。",
+		"modes.smart.desc":     "一般的なパスワードと実用的なルールを自動で試し、ヒントを使って可能性の高い候補を優先します。",
+		"modes.smart.fit":      "最適: 多くのユーザーと初回の復旧",
+		"modes.advanced.title": "高度な復旧",
+		"modes.advanced.desc":  "パスワード長、文字範囲、含める文字列などを指定して検索範囲を絞り込みます。",
+		"modes.advanced.fit":   "最適: パスワード構造の一部を覚えているユーザー",
+		"workflow.step2.desc":  "自動試行のスマート復旧、または長さや文字条件を設定する高度な復旧を選びます。",
+		"pricing.free.item2":   "スマート復旧",
+		"pricing.pro.item2":    "高度な復旧",
+	},
+	"ko": {
+		"modes.title":          "두 가지 복구 모드로 더 명확하게",
+		"modes.subtitle":       "스마트 복구는 일반적인 비밀번호를 자동으로 시도하고, 고급 복구는 길이, 문자 집합, 포함 문자열을 직접 설정합니다.",
+		"modes.smart.desc":     "일반적인 비밀번호와 실용 규칙을 자동으로 시도하고, 힌트를 바탕으로 가능성 높은 후보를 우선 테스트합니다.",
+		"modes.smart.fit":      "적합: 대부분의 사용자와 첫 복구 시도",
+		"modes.advanced.title": "고급 복구",
+		"modes.advanced.desc":  "비밀번호 길이, 문자 범위, 포함해야 할 문자열 등 조건을 설정해 검색 범위를 좁힙니다.",
+		"modes.advanced.fit":   "적합: 비밀번호 구조 일부를 알고 있는 사용자",
+		"workflow.step2.desc":  "자동 시도는 스마트 복구를, 길이와 문자 조건 설정은 고급 복구를 선택합니다.",
+		"pricing.free.item2":   "스마트 복구",
+		"pricing.pro.item2":    "고급 복구",
+	},
+	"de": {
+		"modes.title":          "Zwei Wiederherstellungsmodi, klare Kontrolle",
+		"modes.subtitle":       "Smart Recovery versucht gängige Passwörter automatisch; Advanced Recovery lässt Sie Länge, Zeichensätze und erforderliche Zeichenfolgen selbst festlegen.",
+		"modes.smart.desc":     "Versucht automatisch gängige Passwörter und praktische Regeln und priorisiert mit Ihren Hinweisen wahrscheinliche Kandidaten.",
+		"modes.smart.fit":      "Geeignet für: die meisten Nutzer und erste Wiederherstellungsversuche",
+		"modes.advanced.title": "Advanced Recovery",
+		"modes.advanced.desc":  "Legen Sie Passwortlänge, Zeichenbereiche, enthaltene Zeichenfolgen und weitere Grenzen fest.",
+		"modes.advanced.fit":   "Geeignet für: Nutzer, die Teile der Passwortstruktur kennen",
+		"workflow.step2.desc":  "Wählen Sie Smart Recovery für automatische Versuche oder Advanced Recovery für eigene Längen- und Zeicheneinstellungen.",
+		"pricing.free.item2":   "Smart Recovery",
+		"pricing.pro.item2":    "Advanced Recovery",
+	},
+	"fr": {
+		"modes.title":          "Deux modes de récupération, plus de clarté",
+		"modes.subtitle":       "La récupération intelligente essaie automatiquement les mots de passe courants ; la récupération avancée vous laisse définir longueur, jeux de caractères et chaînes requises.",
+		"modes.smart.desc":     "Essaie automatiquement les mots de passe courants et des règles pratiques, puis utilise vos indices pour prioriser les candidats probables.",
+		"modes.smart.fit":      "Idéal pour : la plupart des utilisateurs et les premières tentatives",
+		"modes.advanced.title": "Récupération avancée",
+		"modes.advanced.desc":  "Définissez la longueur, les plages de caractères, les chaînes à inclure et d'autres contraintes.",
+		"modes.advanced.fit":   "Idéal pour : les utilisateurs qui connaissent une partie de la structure",
+		"workflow.step2.desc":  "Choisissez la récupération intelligente pour les essais automatiques ou la récupération avancée pour les réglages personnalisés.",
+		"pricing.free.item2":   "Récupération intelligente",
+		"pricing.pro.item2":    "Récupération avancée",
+	},
+	"es": {
+		"modes.title":          "Dos modos de recuperación, control claro",
+		"modes.subtitle":       "La recuperación inteligente prueba contraseñas comunes automáticamente; la avanzada permite definir longitud, conjuntos de caracteres y cadenas requeridas.",
+		"modes.smart.desc":     "Prueba automáticamente contraseñas comunes y reglas prácticas, y usa tus pistas para priorizar candidatos probables.",
+		"modes.smart.fit":      "Ideal para: la mayoría de usuarios y primeros intentos",
+		"modes.advanced.title": "Recuperación avanzada",
+		"modes.advanced.desc":  "Configura longitud, rangos de caracteres, cadenas incluidas y otras restricciones.",
+		"modes.advanced.fit":   "Ideal para: usuarios que conocen parte de la estructura",
+		"workflow.step2.desc":  "Elige recuperación inteligente para intentos automáticos o avanzada para ajustes personalizados.",
+		"pricing.free.item2":   "Recuperación inteligente",
+		"pricing.pro.item2":    "Recuperación avanzada",
+	},
+	"pt": {
+		"modes.title":          "Dois modos de recuperação, controle claro",
+		"modes.subtitle":       "A recuperação inteligente tenta senhas comuns automaticamente; a avançada permite definir comprimento, conjuntos de caracteres e strings obrigatórias.",
+		"modes.smart.desc":     "Tenta automaticamente senhas comuns e regras práticas, usando suas pistas para priorizar candidatos prováveis.",
+		"modes.smart.fit":      "Ideal para: a maioria dos usuários e primeiras tentativas",
+		"modes.advanced.title": "Recuperação avançada",
+		"modes.advanced.desc":  "Defina comprimento, faixas de caracteres, strings incluídas e outras restrições.",
+		"modes.advanced.fit":   "Ideal para: usuários que conhecem parte da estrutura",
+		"workflow.step2.desc":  "Escolha recuperação inteligente para tentativas automáticas ou avançada para ajustes personalizados.",
+		"pricing.free.item2":   "Recuperação inteligente",
+		"pricing.pro.item2":    "Recuperação avançada",
+	},
+	"ru": {
+		"modes.title":          "Два режима восстановления, больше контроля",
+		"modes.subtitle":       "Умное восстановление автоматически пробует частые пароли; расширенное позволяет задать длину, наборы символов и обязательные строки.",
+		"modes.smart.desc":     "Автоматически пробует частые пароли и практичные правила, используя подсказки для приоритета вероятных вариантов.",
+		"modes.smart.fit":      "Подходит: большинству пользователей и первым попыткам",
+		"modes.advanced.title": "Расширенное восстановление",
+		"modes.advanced.desc":  "Настройте длину пароля, диапазоны символов, обязательные строки и другие ограничения.",
+		"modes.advanced.fit":   "Подходит: тем, кто знает часть структуры пароля",
+		"workflow.step2.desc":  "Выберите умное восстановление для автоматических попыток или расширенное для собственных настроек.",
+		"pricing.free.item2":   "Умное восстановление",
+		"pricing.pro.item2":    "Расширенное восстановление",
+	},
+}
+
+var downloadCtaLabels = map[string]string{
+	"en": "Download Now",
+	"zh": "立即下载",
+	"ja": "今すぐダウンロード",
+	"ko": "지금 다운로드",
+	"de": "Jetzt herunterladen",
+	"fr": "Telecharger",
+	"es": "Descargar ahora",
+	"pt": "Baixar agora",
+	"ru": "Скачать сейчас",
+}
+
+func applyDownloadCtaOverrides() {
+	for code, label := range downloadCtaLabels {
+		if locale, ok := translations[code]; ok {
+			locale["cta.freeTrial"] = label
+		}
+	}
+}
+
+var checkoutContent = map[string]map[string]string{
+	"en": {
+		"checkout.meta.title":               "RecoverEase Pro Checkout",
+		"checkout.meta.description":         "Complete your RecoverEase Pro purchase and get a lifetime license for advanced password recovery.",
+		"checkout.backHome":                 "Back to website",
+		"checkout.eyebrow":                  "Secure Checkout",
+		"checkout.title":                    "Complete your RecoverEase Pro order",
+		"checkout.subtitle":                 "One-time lifetime license for advanced recovery, GPU acceleration, batch tasks, and priority support.",
+		"checkout.aria":                     "RecoverEase Pro checkout",
+		"checkout.account.title":            "License delivery",
+		"checkout.account.desc":             "Your license key and receipt will be sent to this email address.",
+		"checkout.email":                    "Email address",
+		"checkout.name":                     "Full name",
+		"checkout.payment.title":            "Payment method",
+		"checkout.payment.desc":             "Choose a payment method. Your card details are handled by the payment provider.",
+		"checkout.payment.card":             "Credit or debit card",
+		"checkout.cardNumber":               "Card number",
+		"checkout.expiry":                   "Expiry date",
+		"checkout.cvc":                      "Security code",
+		"checkout.billing.title":            "Billing details",
+		"checkout.billing.desc":             "Used for tax calculation and invoice records where required.",
+		"checkout.country":                  "Country or region",
+		"checkout.country.us":               "United States",
+		"checkout.country.cn":               "China",
+		"checkout.country.eu":               "European Union",
+		"checkout.country.other":            "Other",
+		"checkout.coupon":                   "Coupon code",
+		"checkout.coupon.placeholder":       "Optional",
+		"checkout.summary.title":            "Order summary",
+		"checkout.summary.license":          "Lifetime license, 1 user",
+		"checkout.summary.subtotal":         "Subtotal",
+		"checkout.summary.tax":              "Estimated tax",
+		"checkout.summary.taxValue":         "Calculated at payment",
+		"checkout.summary.total":            "Total due today",
+		"checkout.pay":                      "Continue to secure payment",
+		"checkout.terms":                    "By continuing, you agree to the Terms of Service and Privacy Policy.",
+		"checkout.assurance.delivery.title": "Instant license delivery",
+		"checkout.assurance.delivery.desc":  "Receive your license key by email after payment is confirmed.",
+		"checkout.assurance.privacy.title":  "Local recovery workflow",
+		"checkout.assurance.privacy.desc":   "RecoverEase does not upload your protected files for recovery.",
+		"checkout.assurance.secure.title":   "Encrypted payment",
+		"checkout.assurance.secure.desc":    "Payment details are submitted through a secure payment flow.",
+	},
+	"zh": {
+		"checkout.meta.title":               "RecoverEase Pro 结算",
+		"checkout.meta.description":         "完成 RecoverEase Pro 购买，获取高级密码恢复功能的一次性永久授权。",
+		"checkout.backHome":                 "返回官网",
+		"checkout.eyebrow":                  "安全结算",
+		"checkout.title":                    "完成 RecoverEase Pro 订单",
+		"checkout.subtitle":                 "一次性永久授权，包含高级恢复、GPU 加速、批量任务和优先客服支持。",
+		"checkout.aria":                     "RecoverEase Pro 结算页",
+		"checkout.account.title":            "授权交付",
+		"checkout.account.desc":             "授权码和收据会发送到这个邮箱地址。",
+		"checkout.email":                    "邮箱地址",
+		"checkout.name":                     "姓名",
+		"checkout.payment.title":            "支付方式",
+		"checkout.payment.desc":             "选择支付方式。银行卡信息将由支付服务商安全处理。",
+		"checkout.payment.card":             "信用卡或借记卡",
+		"checkout.cardNumber":               "银行卡号",
+		"checkout.expiry":                   "有效期",
+		"checkout.cvc":                      "安全码",
+		"checkout.billing.title":            "账单信息",
+		"checkout.billing.desc":             "用于税费计算以及必要的发票或订单记录。",
+		"checkout.country":                  "国家或地区",
+		"checkout.country.us":               "美国",
+		"checkout.country.cn":               "中国",
+		"checkout.country.eu":               "欧盟",
+		"checkout.country.other":            "其他",
+		"checkout.coupon":                   "优惠码",
+		"checkout.coupon.placeholder":       "可选",
+		"checkout.summary.title":            "订单摘要",
+		"checkout.summary.license":          "永久授权，1 位用户",
+		"checkout.summary.subtotal":         "小计",
+		"checkout.summary.tax":              "预计税费",
+		"checkout.summary.taxValue":         "支付时计算",
+		"checkout.summary.total":            "今日应付",
+		"checkout.pay":                      "继续安全支付",
+		"checkout.terms":                    "继续即表示您同意服务条款和隐私政策。",
+		"checkout.assurance.delivery.title": "授权码即时交付",
+		"checkout.assurance.delivery.desc":  "支付确认后，授权码会通过邮件发送给您。",
+		"checkout.assurance.privacy.title":  "本地恢复流程",
+		"checkout.assurance.privacy.desc":   "RecoverEase 不会上传您的受保护文件进行恢复。",
+		"checkout.assurance.secure.title":   "加密支付",
+		"checkout.assurance.secure.desc":    "支付信息会通过安全支付流程提交。",
+	},
+}
+
+func applyCheckoutContent() {
+	for code, labels := range checkoutContent {
+		if locale, ok := translations[code]; ok {
+			for key, value := range labels {
+				locale[key] = value
+			}
+		}
+	}
+}
+
+func applyRecoveryModeOverrides() {
+	for code, overrides := range recoveryModeOverrides {
+		if locale, ok := translations[code]; ok {
+			for key, value := range overrides {
+				locale[key] = value
+			}
+		}
+	}
+}
+
+func addLocale(code string, overrides map[string]string) {
+	translations[code] = merge(en, overrides)
+}
+
+func Languages(activeCode string) []Language {
+	return LanguagesForPath(activeCode, "")
+}
+
+func LanguagesForPath(activeCode, suffix string) []Language {
+	langs := make([]Language, len(languageDefinitions))
+	for i, lang := range languageDefinitions {
+		lang.Active = lang.Code == activeCode
+		if suffix != "" {
+			lang.Path = strings.TrimRight(lang.Path, "/") + suffix
+		}
+		langs[i] = lang
+	}
+	return langs
+}
+
+func Alternates(baseURL string) []Language {
+	return AlternatesForPath(baseURL, "")
+}
+
+func AlternatesForPath(baseURL, suffix string) []Language {
+	langs := make([]Language, len(languageDefinitions))
+	for i, lang := range languageDefinitions {
+		path := lang.Path
+		if suffix != "" {
+			path = strings.TrimRight(path, "/") + suffix
+		}
+		lang.Path = absoluteURL(baseURL, path)
+		langs[i] = lang
+	}
+	return langs
+}
+
+func Supported(code string) bool {
+	_, ok := translations[code]
+	return ok
+}
+
+func Normalize(code string) string {
+	code = strings.ToLower(strings.TrimSpace(code))
+	if Supported(code) {
+		return code
+	}
+	return DefaultLocale
+}
+
+func MatchAcceptLanguage(header string) string {
+	bestLocale := DefaultLocale
+	bestQ := -1.0
+
+	for _, item := range strings.Split(header, ",") {
+		tag, q := parseAcceptLanguageItem(item)
+		if q <= 0 || q <= bestQ {
+			continue
+		}
+
+		if locale, ok := matchLanguageTag(tag); ok {
+			bestLocale = locale
+			bestQ = q
+		}
+	}
+
+	return bestLocale
+}
+
+func parseAcceptLanguageItem(item string) (string, float64) {
+	parts := strings.Split(item, ";")
+	tag := strings.ToLower(strings.TrimSpace(parts[0]))
+	q := 1.0
+
+	for _, param := range parts[1:] {
+		keyValue := strings.SplitN(strings.TrimSpace(param), "=", 2)
+		if len(keyValue) != 2 || strings.ToLower(strings.TrimSpace(keyValue[0])) != "q" {
+			continue
+		}
+
+		if parsed, err := strconv.ParseFloat(strings.TrimSpace(keyValue[1]), 64); err == nil {
+			q = parsed
+		}
+	}
+
+	return tag, q
+}
+
+func matchLanguageTag(tag string) (string, bool) {
+	if tag == "" || tag == "*" {
+		return "", false
+	}
+
+	tag = strings.ReplaceAll(tag, "_", "-")
+	if Supported(tag) {
+		return tag, true
+	}
+
+	base, _, _ := strings.Cut(tag, "-")
+	if Supported(base) {
+		return base, true
+	}
+
+	return "", false
+}
+
+func HTMLLang(code string) string {
+	code = Normalize(code)
+	for _, lang := range languageDefinitions {
+		if lang.Code == code {
+			return lang.HTMLLang
+		}
+	}
+	return "zh-CN"
+}
+
+func Path(code string) string {
+	code = Normalize(code)
+	for _, lang := range languageDefinitions {
+		if lang.Code == code {
+			return lang.Path
+		}
+	}
+	return "/"
+}
+
+func CheckoutPath(code string) string {
+	return strings.TrimRight(Path(code), "/") + "/checkout"
+}
+
+func T(code, key string) string {
+	code = Normalize(code)
+	if value, ok := translations[code][key]; ok {
+		return value
+	}
+	if value, ok := en[key]; ok {
+		return value
+	}
+	return key
+}
+
+func Map(code string) map[string]string {
+	code = Normalize(code)
+	return translations[code]
+}
+
+func merge(base, overrides map[string]string) map[string]string {
+	result := make(map[string]string, len(base)+len(overrides))
+	for key, value := range base {
+		result[key] = value
+	}
+	for key, value := range overrides {
+		result[key] = value
+	}
+	return result
+}
+
+func absoluteURL(baseURL, path string) string {
+	return strings.TrimRight(baseURL, "/") + path
+}
