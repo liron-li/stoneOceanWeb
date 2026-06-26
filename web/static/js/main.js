@@ -116,6 +116,22 @@ const setStatusText = (target, type, message) => {
   target.textContent = message;
 };
 
+const focusInvalidEmail = (input) => {
+  if (!input) {
+    return;
+  }
+
+  input.setAttribute("aria-invalid", "true");
+  input.scrollIntoView({ behavior: "smooth", block: "center" });
+  input.focus({ preventScroll: true });
+};
+
+document.querySelectorAll('input[type="email"]').forEach((input) => {
+  input.addEventListener("input", () => {
+    input.removeAttribute("aria-invalid");
+  });
+});
+
 const renderLicenses = (target, message, licenses) => {
   if (!target) {
     return;
@@ -155,12 +171,14 @@ const renderLicenses = (target, message, licenses) => {
 
 checkoutButton?.addEventListener("click", async () => {
   const status = document.querySelector(".checkout-status");
-  const email = document.querySelector('input[name="email"]')?.value.trim();
+  const emailInput = document.querySelector('input[name="email"]');
+  const email = emailInput?.value.trim();
   const license = document.querySelector('input[name="license"]:checked')?.value;
   const paymentMethod = document.querySelector('input[name="payment"]:checked')?.value;
 
   if (!email) {
     setStatusText(status, "error", text.missingEmail);
+    focusInvalidEmail(emailInput);
     return;
   }
 
@@ -180,10 +198,12 @@ checkoutButton?.addEventListener("click", async () => {
 
 recoveryButton?.addEventListener("click", async () => {
   const status = document.querySelector(".recovery-status");
-  const email = document.querySelector('input[name="recovery-email"]')?.value.trim();
+  const emailInput = document.querySelector('input[name="recovery-email"]');
+  const email = emailInput?.value.trim();
 
   if (!email) {
     setStatusText(status, "error", text.missingEmail);
+    focusInvalidEmail(emailInput);
     return;
   }
 

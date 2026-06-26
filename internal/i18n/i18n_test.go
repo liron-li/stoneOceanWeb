@@ -34,6 +34,56 @@ func TestSupportedLanguagesHaveLocalizedVisibleText(t *testing.T) {
 	}
 }
 
+func TestCheckoutAndRecoveryTextIsLocalized(t *testing.T) {
+	criticalKeys := []string{
+		"checkout.backHome",
+		"checkout.recovery.nav",
+		"checkout.eyebrow",
+		"checkout.title",
+		"checkout.subtitle",
+		"checkout.account.title",
+		"checkout.account.desc",
+		"checkout.account.noLogin",
+		"checkout.account.recoverable",
+		"checkout.email",
+		"checkout.emailHint",
+		"checkout.payment.title",
+		"checkout.payment.desc",
+		"checkout.payment.card",
+		"checkout.license.title",
+		"checkout.license.monthly.title",
+		"checkout.license.monthly.desc",
+		"checkout.license.lifetime.title",
+		"checkout.license.lifetime.desc",
+		"checkout.summary.title",
+		"checkout.summary.total",
+		"checkout.pay",
+		"checkout.terms",
+		"recovery.backCheckout",
+		"recovery.eyebrow",
+		"recovery.title",
+		"recovery.subtitle",
+		"recovery.form.title",
+		"recovery.form.desc",
+		"recovery.email",
+		"recovery.emailHint",
+		"recovery.submit",
+		"recovery.note",
+	}
+
+	for _, lang := range languageDefinitions {
+		if lang.Code == "en" {
+			continue
+		}
+
+		for _, key := range criticalKeys {
+			if T(lang.Code, key) == en[key] {
+				t.Fatalf("language %q still falls back to English for checkout/recovery key %q", lang.Code, key)
+			}
+		}
+	}
+}
+
 func TestMatchAcceptLanguage(t *testing.T) {
 	tests := []struct {
 		name   string
