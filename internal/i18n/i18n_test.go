@@ -100,4 +100,16 @@ func TestLanguagePathsAreStable(t *testing.T) {
 	if CheckoutPath("unknown") != "/en/checkout" {
 		t.Fatalf("CheckoutPath(%q) = %q, want /en/checkout", "unknown", CheckoutPath("unknown"))
 	}
+
+	if LicenseRecoveryPath("zh") != "/zh/license-recovery" {
+		t.Fatalf("LicenseRecoveryPath(%q) = %q, want /zh/license-recovery", "zh", LicenseRecoveryPath("zh"))
+	}
+
+	if LicenseRecoveryPath("en") != "/en/license-recovery" {
+		t.Fatalf("LicenseRecoveryPath(%q) = %q, want /en/license-recovery", "en", LicenseRecoveryPath("en"))
+	}
+
+	if LicenseRecoveryPath("unknown") != "/en/license-recovery" {
+		t.Fatalf("LicenseRecoveryPath(%q) = %q, want /en/license-recovery", "unknown", LicenseRecoveryPath("unknown"))
+	}
 }

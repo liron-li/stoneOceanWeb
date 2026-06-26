@@ -21,6 +21,11 @@ func Checkout(c *gin.Context) {
 	c.Redirect(http.StatusFound, i18n.CheckoutPath(locale))
 }
 
+func LicenseRecovery(c *gin.Context) {
+	locale := i18n.MatchAcceptLanguage(c.GetHeader("Accept-Language"))
+	c.Redirect(http.StatusFound, i18n.LicenseRecoveryPath(locale))
+}
+
 func LocalizedHome(c *gin.Context) {
 	locale := c.Param("locale")
 	if !i18n.Supported(locale) {
@@ -41,6 +46,16 @@ func LocalizedCheckout(c *gin.Context) {
 	renderCheckout(c, locale)
 }
 
+func LocalizedLicenseRecovery(c *gin.Context) {
+	locale := c.Param("locale")
+	if !i18n.Supported(locale) {
+		c.Redirect(http.StatusMovedPermanently, i18n.LicenseRecoveryPath(i18n.DefaultLocale))
+		return
+	}
+
+	renderLicenseRecovery(c, locale)
+}
+
 func Robots(c *gin.Context) {
 	baseURL := requestBaseURL(c)
 	c.String(http.StatusOK, "User-agent: *\nAllow: /\nSitemap: %s/sitemap.xml\n", strings.TrimRight(baseURL, "/"))
@@ -58,6 +73,10 @@ func Sitemap(c *gin.Context) {
 		})
 		urls = append(urls, sitemapURL{
 			Loc:     strings.TrimRight(baseURL, "/") + i18n.CheckoutPath(lang.Code),
+			LastMod: now,
+		})
+		urls = append(urls, sitemapURL{
+			Loc:     strings.TrimRight(baseURL, "/") + i18n.LicenseRecoveryPath(lang.Code),
 			LastMod: now,
 		})
 	}
@@ -95,16 +114,39 @@ func renderCheckout(c *gin.Context, locale string) {
 	path := i18n.CheckoutPath(locale)
 
 	c.HTML(http.StatusOK, "checkout.tmpl", gin.H{
-		"Title":        i18n.T(locale, "checkout.meta.title"),
-		"Description":  i18n.T(locale, "checkout.meta.description"),
-		"Locale":       locale,
-		"HTMLLang":     i18n.HTMLLang(locale),
-		"Canonical":    strings.TrimRight(baseURL, "/") + path,
-		"DefaultURL":   strings.TrimRight(baseURL, "/") + "/checkout",
-		"Alternates":   i18n.AlternatesForPath(baseURL, "/checkout"),
-		"Languages":    i18n.LanguagesForPath(locale, "/checkout"),
-		"HomePath":     i18n.Path(locale),
-		"CheckoutPath": path,
+		"Title":               i18n.T(locale, "checkout.meta.title"),
+		"Description":         i18n.T(locale, "checkout.meta.description"),
+		"Locale":              locale,
+		"HTMLLang":            i18n.HTMLLang(locale),
+		"Canonical":           strings.TrimRight(baseURL, "/") + path,
+		"DefaultURL":          strings.TrimRight(baseURL, "/") + "/checkout",
+		"Alternates":          i18n.AlternatesForPath(baseURL, "/checkout"),
+		"Languages":           i18n.LanguagesForPath(locale, "/checkout"),
+		"HomePath":            i18n.Path(locale),
+		"CheckoutPath":        path,
+		"LicenseRecoveryPath": i18n.LicenseRecoveryPath(locale),
+		"T": func(key string) string {
+			return i18n.T(locale, key)
+		},
+	})
+}
+
+func renderLicenseRecovery(c *gin.Context, locale string) {
+	baseURL := requestBaseURL(c)
+	path := i18n.LicenseRecoveryPath(locale)
+
+	c.HTML(http.StatusOK, "license_recovery.tmpl", gin.H{
+		"Title":               i18n.T(locale, "recovery.meta.title"),
+		"Description":         i18n.T(locale, "recovery.meta.description"),
+		"Locale":              locale,
+		"HTMLLang":            i18n.HTMLLang(locale),
+		"Canonical":           strings.TrimRight(baseURL, "/") + path,
+		"DefaultURL":          strings.TrimRight(baseURL, "/") + "/license-recovery",
+		"Alternates":          i18n.AlternatesForPath(baseURL, "/license-recovery"),
+		"Languages":           i18n.LanguagesForPath(locale, "/license-recovery"),
+		"HomePath":            i18n.Path(locale),
+		"CheckoutPath":        i18n.CheckoutPath(locale),
+		"LicenseRecoveryPath": path,
 		"T": func(key string) string {
 			return i18n.T(locale, key)
 		},

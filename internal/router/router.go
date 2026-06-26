@@ -4,24 +4,31 @@ import (
 	"net/http"
 
 	"stone-ocean-web/internal/handlers"
+	"stone-ocean-web/internal/store"
 
 	"github.com/gin-gonic/gin"
 )
 
-func New() *gin.Engine {
+func New(appStore *store.Store) *gin.Engine {
 	r := gin.Default()
+	api := handlers.NewAPI(appStore)
 
 	r.Static("/static", "./web/static")
 	r.LoadHTMLGlob("web/templates/*")
 
 	r.GET("/", handlers.Home)
 	r.GET("/checkout", handlers.Checkout)
+	r.GET("/license-recovery", handlers.LicenseRecovery)
 	r.GET("/healthz", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
 	})
+	r.POST("/api/checkout", api.CreateCheckout)
+	r.POST("/api/payments/:paymentNo/confirm", api.ConfirmPayment)
+	r.POST("/api/license-recovery", api.RecoverLicenses)
 	r.GET("/robots.txt", handlers.Robots)
 	r.GET("/sitemap.xml", handlers.Sitemap)
 	r.GET("/:locale/checkout", handlers.LocalizedCheckout)
+	r.GET("/:locale/license-recovery", handlers.LocalizedLicenseRecovery)
 	r.GET("/:locale", handlers.LocalizedHome)
 
 	return r

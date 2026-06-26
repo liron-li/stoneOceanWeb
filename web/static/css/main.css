@@ -910,8 +910,11 @@ body[data-theme="dark"] .timeline li > span {
 }
 
 .checkout-hero h1 {
-  max-width: 720px;
-  font-size: clamp(36px, 4.4vw, 58px);
+  max-width: none;
+  overflow-wrap: normal;
+  font-size: 32px;
+  line-height: 1.16;
+  white-space: nowrap;
 }
 
 .checkout-hero p:last-child {
@@ -936,14 +939,16 @@ body[data-theme="dark"] .timeline li > span {
 
 .checkout-card,
 .summary-card,
-.checkout-assurance {
+.checkout-assurance,
+.license-recovery-card {
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface);
 }
 
 .checkout-card,
-.summary-card {
+.summary-card,
+.license-recovery-card {
   padding: 28px;
 }
 
@@ -965,6 +970,25 @@ body[data-theme="dark"] .timeline li > span {
   line-height: 1.6;
 }
 
+.checkout-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.checkout-badges span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: var(--blue);
+  background: var(--blue-soft);
+  font-size: 12px;
+  font-weight: 820;
+}
+
 .checkout-step {
   display: grid;
   flex: 0 0 auto;
@@ -984,6 +1008,10 @@ body[data-theme="dark"] .timeline li > span {
   gap: 14px;
 }
 
+.field-grid.compact {
+  max-width: 560px;
+}
+
 .field,
 .payment-option {
   display: grid;
@@ -998,6 +1026,12 @@ body[data-theme="dark"] .timeline li > span {
   color: var(--ink);
   font-size: 13px;
   font-weight: 760;
+}
+
+.field small {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 
 .field input,
@@ -1028,7 +1062,7 @@ body[data-theme="dark"] .timeline li > span {
 }
 
 .payment-option {
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto auto 1fr;
   align-items: center;
   min-height: 46px;
   padding: 0 13px;
@@ -1043,6 +1077,59 @@ body[data-theme="dark"] .timeline li > span {
   background: var(--blue-soft);
 }
 
+.payment-icon {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  color: var(--blue);
+}
+
+.payment-icon-usdt {
+  border: 1px solid rgba(21, 109, 255, 0.34);
+  border-radius: 50%;
+  background: rgba(21, 109, 255, 0.08);
+  font-size: 12px;
+  font-weight: 840;
+}
+
+.payment-icon-card {
+  position: relative;
+  border: 1.6px solid currentColor;
+  border-radius: 5px;
+}
+
+.payment-icon-card::before {
+  content: "";
+  position: absolute;
+  top: 5px;
+  left: 3px;
+  right: 3px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+.checkout-payment-note {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.checkout-payment-note span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--muted);
+  background: var(--surface-soft);
+  font-size: 13px;
+  font-weight: 760;
+}
+
 .order-summary {
   position: sticky;
   top: 88px;
@@ -1054,6 +1141,13 @@ body[data-theme="dark"] .timeline li > span {
   margin-bottom: 16px;
 }
 
+.license-options-title {
+  margin: 18px 0 10px;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 820;
+}
+
 .product-line,
 .total-list div,
 .checkout-assurance article {
@@ -1062,22 +1156,102 @@ body[data-theme="dark"] .timeline li > span {
   gap: 16px;
 }
 
-.product-line {
+.product-line,
+.license-options {
   margin: 22px 0;
   padding-bottom: 20px;
   border-bottom: 1px solid var(--line);
 }
 
-.product-line div {
+.product-line div,
+.license-option-copy {
   display: grid;
   gap: 5px;
 }
 
 .product-line span,
+.license-option-copy small,
 .total-list dt,
 .checkout-note,
 .checkout-assurance span {
   color: var(--muted);
+}
+
+.license-options {
+  display: grid;
+  gap: 12px;
+  margin-top: 0;
+}
+
+.license-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  min-height: 76px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--ink);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.license-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.license-option::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--line-strong);
+  border-radius: 50%;
+  background: var(--surface);
+}
+
+.license-option-copy {
+  padding-right: 34px;
+}
+
+.license-option-copy strong,
+.license-option-price {
+  color: var(--ink);
+}
+
+.license-option-price {
+  padding-right: 34px;
+  font-size: 20px;
+  font-weight: 840;
+  line-height: 1;
+}
+
+.license-option:has(input:checked) {
+  border-color: rgba(21, 109, 255, 0.46);
+  background: var(--blue-soft);
+  box-shadow: 0 0 0 4px rgba(21, 109, 255, 0.08);
+}
+
+.license-option:has(input:checked)::after {
+  border-color: var(--blue);
+  background:
+    radial-gradient(circle at center, var(--blue) 0 42%, transparent 45%),
+    var(--surface);
+}
+
+.license-option:has(input:focus-visible) {
+  outline: 3px solid rgba(21, 109, 255, 0.24);
+  outline-offset: 2px;
 }
 
 .total-list {
@@ -1103,6 +1277,12 @@ body[data-theme="dark"] .timeline li > span {
   font-size: 20px;
 }
 
+.total-list-compact .total-row {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
 .checkout-submit {
   width: 100%;
   min-height: 48px;
@@ -1113,6 +1293,122 @@ body[data-theme="dark"] .timeline li > span {
   margin: 14px 0 0;
   font-size: 12px;
   line-height: 1.6;
+}
+
+.form-status {
+  display: none;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--surface-tint);
+}
+
+.form-status.pending,
+.form-status.success,
+.form-status.error,
+.form-status.empty {
+  display: block;
+}
+
+.form-status.success {
+  border-color: rgba(28, 151, 86, 0.24);
+  color: #146c43;
+  background: rgba(28, 151, 86, 0.08);
+}
+
+.form-status.error {
+  border-color: rgba(218, 55, 67, 0.24);
+  color: #9f2532;
+  background: rgba(218, 55, 67, 0.08);
+}
+
+.form-status p {
+  margin: 0;
+}
+
+.license-result-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.license-result {
+  display: grid;
+  gap: 5px;
+  padding: 10px;
+  border: 1px solid rgba(21, 109, 255, 0.18);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.license-result strong {
+  color: var(--ink);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.license-result span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.license-recovery-card {
+  display: grid;
+  gap: 16px;
+  background:
+    linear-gradient(180deg, var(--surface-tint), var(--surface));
+}
+
+.license-recovery-card h2 {
+  font-size: 21px;
+  line-height: 1.2;
+}
+
+.license-recovery-card p {
+  margin: -6px 0 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.license-recovery-submit {
+  min-height: 44px;
+}
+
+.recovery-page {
+  width: min(960px, calc(100% - 40px));
+}
+
+.recovery-hero {
+  max-width: 720px;
+}
+
+.recovery-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 22px;
+  align-items: start;
+}
+
+.recovery-form-card {
+  gap: 18px;
+}
+
+.recovery-form-card .field {
+  max-width: 520px;
+}
+
+.recovery-form-card .checkout-note {
+  margin-top: -2px;
+}
+
+.recovery-assurance {
+  position: sticky;
+  top: 88px;
 }
 
 .checkout-assurance {
@@ -1191,11 +1487,13 @@ body[data-theme="dark"] .timeline li > span {
     display: none;
   }
 
-  .checkout-layout {
+  .checkout-layout,
+  .recovery-layout {
     grid-template-columns: 1fr;
   }
 
-  .order-summary {
+  .order-summary,
+  .recovery-assurance {
     position: static;
   }
 }
@@ -1479,7 +1777,7 @@ body[data-theme="dark"] .timeline li > span {
   }
 
   .checkout-hero h1 {
-    font-size: 34px;
+    font-size: 24px;
   }
 
   .checkout-hero p:last-child {
@@ -1487,7 +1785,8 @@ body[data-theme="dark"] .timeline li > span {
   }
 
   .checkout-card,
-  .summary-card {
+  .summary-card,
+  .license-recovery-card {
     padding: 22px;
   }
 

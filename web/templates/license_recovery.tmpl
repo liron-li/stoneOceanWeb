@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="{{ .HTMLLang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ .Description }}">
+  <title>{{ .Title }}</title>
+  <link rel="canonical" href="{{ .Canonical }}">
+  {{ range .Alternates }}
+  <link rel="alternate" hreflang="{{ .HrefLang }}" href="{{ .Path }}">
+  {{ end }}
+  <link rel="alternate" hreflang="x-default" href="{{ .DefaultURL }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&amp;family=Noto+Sans+SC:wght@400..900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ .HomePath }}" aria-label="{{ call .T "brand.aria" }}">
+        <span class="brand-mark">R</span>
+        <span>RecoverEase</span>
+      </a>
+      <nav class="nav-links checkout-nav" aria-label="{{ call .T "nav.aria" }}">
+        <a href="{{ .HomePath }}">{{ call .T "checkout.backHome" }}</a>
+        <a href="{{ .CheckoutPath }}">{{ call .T "recovery.backCheckout" }}</a>
+      </nav>
+      <div class="header-actions">
+        <details class="locale-menu">
+          <summary aria-label="{{ call .T "controls.language" }}">
+            <span class="locale-label">{{ call .T "controls.language" }}</span>
+            <strong>
+              {{ range .Languages }}{{ if .Active }}{{ .Name }}{{ end }}{{ end }}
+            </strong>
+            <span class="locale-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="locale-list" role="listbox">
+            {{ range .Languages }}
+            <a class="locale-option{{ if .Active }} active{{ end }}" href="{{ .Path }}" hreflang="{{ .HrefLang }}" lang="{{ .HTMLLang }}" role="option" aria-selected="{{ .Active }}">{{ .Name }}</a>
+            {{ end }}
+          </div>
+        </details>
+        <button class="theme-toggle" type="button" aria-label="{{ call .T "controls.theme" }}" title="{{ call .T "controls.theme" }}">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-page recovery-page">
+    <section class="checkout-hero recovery-hero">
+      <p class="eyebrow">{{ call .T "recovery.eyebrow" }}</p>
+      <h1>{{ call .T "recovery.title" }}</h1>
+      <p>{{ call .T "recovery.subtitle" }}</p>
+    </section>
+
+    <section class="recovery-layout" aria-label="{{ call .T "recovery.aria" }}">
+      <form class="license-recovery-card recovery-form-card" action="#" method="post">
+        <h2>{{ call .T "recovery.form.title" }}</h2>
+        <p>{{ call .T "recovery.form.desc" }}</p>
+        <label class="field">
+          <span>{{ call .T "recovery.email" }}</span>
+          <input type="email" name="recovery-email" autocomplete="email" placeholder="you@example.com">
+          <small>{{ call .T "recovery.emailHint" }}</small>
+        </label>
+        <button class="button button-primary license-recovery-submit" type="button">{{ call .T "recovery.submit" }}</button>
+        <div class="form-status recovery-status" role="status" aria-live="polite"></div>
+        <p class="checkout-note">{{ call .T "recovery.note" }}</p>
+      </form>
+
+      <div class="checkout-assurance recovery-assurance">
+        <article>
+          <strong>{{ call .T "checkout.assurance.delivery.title" }}</strong>
+          <span>{{ call .T "checkout.assurance.delivery.desc" }}</span>
+        </article>
+        <article>
+          <strong>{{ call .T "checkout.assurance.secure.title" }}</strong>
+          <span>{{ call .T "checkout.assurance.secure.desc" }}</span>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

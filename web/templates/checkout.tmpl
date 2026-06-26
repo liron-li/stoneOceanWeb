@@ -24,6 +24,7 @@
       </a>
       <nav class="nav-links checkout-nav" aria-label="{{ call .T "nav.aria" }}">
         <a href="{{ .HomePath }}">{{ call .T "checkout.backHome" }}</a>
+        <a href="{{ .LicenseRecoveryPath }}">{{ call .T "checkout.recovery.nav" }}</a>
       </nav>
       <div class="header-actions">
         <details class="locale-menu">
@@ -62,16 +63,17 @@
             <div>
               <h2>{{ call .T "checkout.account.title" }}</h2>
               <p>{{ call .T "checkout.account.desc" }}</p>
+              <div class="checkout-badges" aria-label="{{ call .T "checkout.account.badges" }}">
+                <span>{{ call .T "checkout.account.noLogin" }}</span>
+                <span>{{ call .T "checkout.account.recoverable" }}</span>
+              </div>
             </div>
           </div>
-          <div class="field-grid">
-            <label class="field">
+          <div class="field-grid compact">
+            <label class="field field-wide">
               <span>{{ call .T "checkout.email" }}</span>
               <input type="email" name="email" autocomplete="email" placeholder="you@example.com">
-            </label>
-            <label class="field">
-              <span>{{ call .T "checkout.name" }}</span>
-              <input type="text" name="name" autocomplete="name" placeholder="Alex Chen">
+              <small>{{ call .T "checkout.emailHint" }}</small>
             </label>
           </div>
         </section>
@@ -86,51 +88,14 @@
           </div>
           <div class="payment-methods" role="radiogroup" aria-label="{{ call .T "checkout.payment.title" }}">
             <label class="payment-option">
-              <input type="radio" name="payment" checked>
-              <span>{{ call .T "checkout.payment.card" }}</span>
+              <input type="radio" name="payment" value="usdt" checked>
+              <span class="payment-icon payment-icon-usdt" aria-hidden="true">T</span>
+              <span>{{ call .T "checkout.payment.usdt" }}</span>
             </label>
             <label class="payment-option">
-              <input type="radio" name="payment">
-              <span>PayPal</span>
-            </label>
-          </div>
-          <div class="field-grid">
-            <label class="field field-wide">
-              <span>{{ call .T "checkout.cardNumber" }}</span>
-              <input type="text" name="card-number" inputmode="numeric" autocomplete="cc-number" placeholder="1234 1234 1234 1234">
-            </label>
-            <label class="field">
-              <span>{{ call .T "checkout.expiry" }}</span>
-              <input type="text" name="expiry" inputmode="numeric" autocomplete="cc-exp" placeholder="MM / YY">
-            </label>
-            <label class="field">
-              <span>{{ call .T "checkout.cvc" }}</span>
-              <input type="text" name="cvc" inputmode="numeric" autocomplete="cc-csc" placeholder="CVC">
-            </label>
-          </div>
-        </section>
-
-        <section class="checkout-card">
-          <div class="checkout-card-heading">
-            <span class="checkout-step">3</span>
-            <div>
-              <h2>{{ call .T "checkout.billing.title" }}</h2>
-              <p>{{ call .T "checkout.billing.desc" }}</p>
-            </div>
-          </div>
-          <div class="field-grid">
-            <label class="field">
-              <span>{{ call .T "checkout.country" }}</span>
-              <select name="country">
-                <option>{{ call .T "checkout.country.us" }}</option>
-                <option>{{ call .T "checkout.country.cn" }}</option>
-                <option>{{ call .T "checkout.country.eu" }}</option>
-                <option>{{ call .T "checkout.country.other" }}</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>{{ call .T "checkout.coupon" }}</span>
-              <input type="text" name="coupon" placeholder="{{ call .T "checkout.coupon.placeholder" }}">
+              <input type="radio" name="payment" value="card">
+              <span class="payment-icon payment-icon-card" aria-hidden="true"></span>
+              <span>{{ call .T "checkout.payment.card" }}</span>
             </label>
           </div>
         </section>
@@ -140,45 +105,36 @@
         <div class="summary-card">
           <span class="tag">{{ call .T "labels.bestValue" }}</span>
           <h2>{{ call .T "checkout.summary.title" }}</h2>
-          <div class="product-line">
-            <div>
-              <strong>RecoverEase Pro</strong>
-              <span>{{ call .T "checkout.summary.license" }}</span>
-            </div>
-            <strong>$29</strong>
+          <p class="license-options-title">{{ call .T "checkout.license.title" }}</p>
+          <div class="license-options" role="radiogroup" aria-label="{{ call .T "checkout.license.title" }}">
+            <label class="license-option">
+              <input type="radio" name="license" value="monthly" data-price="9">
+              <span class="license-option-copy">
+                <strong>{{ call .T "checkout.license.monthly.title" }}</strong>
+                <small>{{ call .T "checkout.license.monthly.desc" }}</small>
+              </span>
+              <span class="license-option-price">{{ call .T "checkout.license.monthly.price" }}</span>
+            </label>
+            <label class="license-option">
+              <input type="radio" name="license" value="lifetime" data-price="29" checked>
+              <span class="license-option-copy">
+                <strong>{{ call .T "checkout.license.lifetime.title" }}</strong>
+                <small>{{ call .T "checkout.license.lifetime.desc" }}</small>
+              </span>
+              <span class="license-option-price">{{ call .T "checkout.license.lifetime.price" }}</span>
+            </label>
           </div>
-          <dl class="total-list">
-            <div>
-              <dt>{{ call .T "checkout.summary.subtotal" }}</dt>
-              <dd>$29.00</dd>
-            </div>
-            <div>
-              <dt>{{ call .T "checkout.summary.tax" }}</dt>
-              <dd>{{ call .T "checkout.summary.taxValue" }}</dd>
-            </div>
+          <dl class="total-list total-list-compact">
             <div class="total-row">
               <dt>{{ call .T "checkout.summary.total" }}</dt>
-              <dd>$29.00</dd>
+              <dd data-license-price>$29.00</dd>
             </div>
           </dl>
           <button class="button button-primary checkout-submit" type="button">{{ call .T "checkout.pay" }}</button>
+          <div class="form-status checkout-status" role="status" aria-live="polite"></div>
           <p class="checkout-note">{{ call .T "checkout.terms" }}</p>
         </div>
 
-        <div class="checkout-assurance">
-          <article>
-            <strong>{{ call .T "checkout.assurance.delivery.title" }}</strong>
-            <span>{{ call .T "checkout.assurance.delivery.desc" }}</span>
-          </article>
-          <article>
-            <strong>{{ call .T "checkout.assurance.privacy.title" }}</strong>
-            <span>{{ call .T "checkout.assurance.privacy.desc" }}</span>
-          </article>
-          <article>
-            <strong>{{ call .T "checkout.assurance.secure.title" }}</strong>
-            <span>{{ call .T "checkout.assurance.secure.desc" }}</span>
-          </article>
-        </div>
       </aside>
     </section>
   </main>
