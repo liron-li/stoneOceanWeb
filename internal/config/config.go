@@ -29,7 +29,6 @@ type DatabaseConfig struct {
 	Charset      string
 	ParseTime    bool
 	Location     string
-	SQLitePath   string
 	AutoMigrate  bool
 	SeedPlans    bool
 	SeedDemoData bool
@@ -53,7 +52,6 @@ func Load() Config {
 			Charset:      env("DB_CHARSET", "utf8mb4"),
 			ParseTime:    envBool("DB_PARSE_TIME", true),
 			Location:     env("DB_LOC", "Local"),
-			SQLitePath:   env("DB_SQLITE_PATH", "tmp/recoverease.db"),
 			AutoMigrate:  envBool("DB_AUTO_MIGRATE", true),
 			SeedPlans:    envBool("DB_SEED_PLANS", true),
 			SeedDemoData: envBool("DB_SEED_DEMO_DATA", false),
