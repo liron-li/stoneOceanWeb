@@ -5,6 +5,8 @@ import (
 	"log"
 
 	"stone-ocean-web/internal/config"
+	"stone-ocean-web/internal/events"
+	"stone-ocean-web/internal/mailer"
 	"stone-ocean-web/internal/router"
 	"stone-ocean-web/internal/store"
 )
@@ -37,7 +39,15 @@ func main() {
 		log.Printf("database connected using %s", cfg.Database.Driver)
 	}
 
-	r := router.New(appStore)
+	eventBus := events.NewBus(log.Default())
+	if cfg.Email.Enabled {
+		eventBus.AddPaymentPaidListener(events.NewLicenseEmailListener(mailer.NewSMTPMailer(cfg.Email)))
+		log.Printf("license email listener enabled for %s:%s", cfg.Email.Host, cfg.Email.Port)
+	} else {
+		log.Printf("license email listener disabled; set EMAIL_* SMTP variables to enable delivery")
+	}
+
+	r := router.NewWithEvents(appStore, eventBus)
 
 	log.Printf("stoneOceanWeb is running at http://localhost:%s", cfg.App.Port)
 	if err := r.Run(":" + cfg.App.Port); err != nil {

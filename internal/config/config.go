@@ -12,6 +12,7 @@ import (
 type Config struct {
 	App      AppConfig
 	Database DatabaseConfig
+	Email    EmailConfig
 }
 
 type AppConfig struct {
@@ -34,8 +35,20 @@ type DatabaseConfig struct {
 	SeedDemoData bool
 }
 
+type EmailConfig struct {
+	Enabled     bool
+	Host        string
+	Port        string
+	Username    string
+	Password    string
+	FromName    string
+	FromAddress string
+	ReplyTo     string
+}
+
 func Load() Config {
 	_ = godotenv.Load()
+	email := loadEmailConfig()
 
 	return Config{
 		App: AppConfig{
@@ -56,7 +69,24 @@ func Load() Config {
 			SeedPlans:    envBool("DB_SEED_PLANS", true),
 			SeedDemoData: envBool("DB_SEED_DEMO_DATA", false),
 		},
+		Email: email,
 	}
+}
+
+func loadEmailConfig() EmailConfig {
+	username := env("EMAIL_USER", env("SMTP_USER", env("MAIL_USER", env("USER", ""))))
+	cfg := EmailConfig{
+		Host:        env("EMAIL_HOST", env("SMTP_HOST", env("MAIL_HOST", env("HOST", "")))),
+		Port:        env("EMAIL_PORT", env("SMTP_PORT", env("MAIL_PORT", env("PORT", "587")))),
+		Username:    username,
+		Password:    env("EMAIL_PASSWORD", env("SMTP_PASSWORD", env("MAIL_PASSWORD", env("PASS", "")))),
+		FromName:    env("EMAIL_FROM_NAME", "RecoverEase"),
+		FromAddress: env("EMAIL_FROM", env("EMAIL_ALIAS", env("ALIAS", username))),
+		ReplyTo:     env("EMAIL_REPLY_TO", env("REPLY_TO", "")),
+	}
+	configured := cfg.Host != "" && cfg.Port != "" && cfg.Username != "" && cfg.Password != "" && cfg.FromAddress != ""
+	cfg.Enabled = envBool("EMAIL_ENABLED", configured)
+	return cfg
 }
 
 func (c DatabaseConfig) MySQLDSN() string {

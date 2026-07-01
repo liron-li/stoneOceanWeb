@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"stone-ocean-web/internal/events"
 	"stone-ocean-web/internal/handlers"
 	"stone-ocean-web/internal/store"
 
@@ -10,8 +11,12 @@ import (
 )
 
 func New(appStore *store.Store) *gin.Engine {
+	return NewWithEvents(appStore, nil)
+}
+
+func NewWithEvents(appStore *store.Store, eventBus *events.Bus) *gin.Engine {
 	r := gin.Default()
-	api := handlers.NewAPI(appStore)
+	api := handlers.NewAPIWithEvents(appStore, eventBus)
 
 	r.Static("/static", "./web/static")
 	r.LoadHTMLGlob("web/templates/*")

@@ -1,17 +1,20 @@
 package handlers
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"time"
 
+	"stone-ocean-web/internal/events"
 	"stone-ocean-web/internal/store"
 
 	"github.com/gin-gonic/gin"
 )
 
 type API struct {
-	store *store.Store
+	store  *store.Store
+	events *events.Bus
 }
 
 // checkoutRequest 是前端创建订单时提交的 JSON 请求体。
@@ -19,6 +22,7 @@ type checkoutRequest struct {
 	Email         string              `json:"email"`
 	License       store.LicenseKind   `json:"license"`
 	PaymentMethod store.PaymentMethod `json:"paymentMethod"`
+	Locale        string              `json:"locale"`
 }
 
 // recoveryRequest 是找回授权码接口使用的 JSON 请求体。
@@ -29,6 +33,10 @@ type recoveryRequest struct {
 // NewAPI 创建一组依赖 Store 的 API 处理器。
 func NewAPI(appStore *store.Store) *API {
 	return &API{store: appStore}
+}
+
+func NewAPIWithEvents(appStore *store.Store, eventBus *events.Bus) *API {
+	return &API{store: appStore, events: eventBus}
 }
 
 // CreateCheckout 根据邮箱、授权类型和支付方式创建待支付订单。
@@ -54,6 +62,7 @@ func (api *API) CreateCheckout(c *gin.Context) {
 		Email:         req.Email,
 		PlanCode:      planCode,
 		PaymentMethod: req.PaymentMethod,
+		Locale:        req.Locale,
 	})
 	if err != nil {
 		api.writeStoreError(c, err)
@@ -79,10 +88,14 @@ func (api *API) ConfirmPayment(c *gin.Context) {
 	}
 
 	paymentNo := c.Param("paymentNo")
+	alreadyPaid := api.paymentAlreadyDelivered(c.Request.Context(), paymentNo)
 	license, err := api.store.MarkPaymentPaid(c.Request.Context(), paymentNo, "frontend-test-confirm", time.Now())
 	if err != nil {
 		api.writeStoreError(c, err)
 		return
+	}
+	if !alreadyPaid {
+		api.publishPaymentPaid(license)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -169,6 +182,21 @@ func (api *API) writeStoreError(c *gin.Context, err error) {
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong. Please try again."})
 	}
+}
+
+func (api *API) publishPaymentPaid(license *store.License) {
+	if api == nil || api.events == nil || license == nil {
+		return
+	}
+	api.events.PublishPaymentPaid(events.PaymentPaidEvent{License: license})
+}
+
+func (api *API) paymentAlreadyDelivered(ctx context.Context, paymentNo string) bool {
+	result, err := api.store.FindPaymentResult(ctx, paymentNo)
+	if err != nil {
+		return false
+	}
+	return result.Payment.Status == store.PaymentStatusPaid && result.License != nil
 }
 
 // planCodeForLicense 把页面上的授权类型映射到默认套餐 code。

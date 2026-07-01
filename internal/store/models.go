@@ -62,6 +62,7 @@ type Order struct {
 	LicenseKind   LicenseKind   `gorm:"size:32;not null"`
 	AmountCents   int64         `gorm:"not null"`
 	Currency      string        `gorm:"size:8;not null"`
+	Locale        string        `gorm:"size:16;not null;default:en"`
 	Status        OrderStatus   `gorm:"size:32;not null;index"`
 	PaymentMethod PaymentMethod `gorm:"size:32;not null"`
 	PaidAt        *time.Time    `gorm:"index"`

@@ -102,9 +102,13 @@ func TestFindPaymentResultReturnsLicenseAfterPayment(t *testing.T) {
 		Email:         "result@example.com",
 		PlanCode:      DefaultLifetimePlanCode,
 		PaymentMethod: PaymentMethodUSDT,
+		Locale:        "zh-CN",
 	})
 	if err != nil {
 		t.Fatalf("CreateCheckoutOrder() error = %v", err)
+	}
+	if result.Order.Locale != "zh" {
+		t.Fatalf("Order.Locale = %q, want zh", result.Order.Locale)
 	}
 
 	pending, err := store.FindPaymentResult(ctx, result.Payment.PaymentNo)

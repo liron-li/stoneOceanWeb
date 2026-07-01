@@ -34,6 +34,7 @@ type CreateCheckoutOrderInput struct {
 	Email         string
 	PlanCode      string
 	PaymentMethod PaymentMethod
+	Locale        string
 }
 
 type CreateCheckoutOrderResult struct {
@@ -161,6 +162,24 @@ func NormalizeEmail(email string) (string, error) {
 	return strings.ToLower(address.Address), nil
 }
 
+func NormalizeLocale(locale string) string {
+	locale = strings.ToLower(strings.TrimSpace(locale))
+	locale = strings.ReplaceAll(locale, "_", "-")
+	if locale == "" {
+		return "en"
+	}
+	if base, _, ok := strings.Cut(locale, "-"); ok {
+		locale = base
+	}
+
+	switch locale {
+	case "zh", "en", "ja", "ko", "de", "fr", "es", "pt", "ru":
+		return locale
+	default:
+		return "en"
+	}
+}
+
 func (s *Store) CreateCheckoutOrder(ctx context.Context, input CreateCheckoutOrderInput) (*CreateCheckoutOrderResult, error) {
 	normalizedEmail, err := NormalizeEmail(input.Email)
 	if err != nil {
@@ -197,6 +216,7 @@ func (s *Store) CreateCheckoutOrder(ctx context.Context, input CreateCheckoutOrd
 			LicenseKind:   plan.Kind,
 			AmountCents:   plan.PriceCents,
 			Currency:      plan.Currency,
+			Locale:        NormalizeLocale(input.Locale),
 			Status:        OrderStatusPending,
 			PaymentMethod: input.PaymentMethod,
 		}
