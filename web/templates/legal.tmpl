@@ -24,7 +24,8 @@
       </a>
       <nav class="nav-links checkout-nav" aria-label="{{ call .T "nav.aria" }}">
         <a href="{{ .HomePath }}">{{ call .T "checkout.backHome" }}</a>
-        <a href="{{ .CheckoutPath }}">{{ call .T "recovery.backCheckout" }}</a>
+        <a href="{{ .CheckoutPath }}">{{ call .T "cta.buyPro" }}</a>
+        <a href="{{ .LicenseRecoveryPath }}">{{ call .T "footer.licenseRecovery" }}</a>
       </nav>
       <div class="header-actions">
         <details class="locale-menu">
@@ -48,44 +49,42 @@
     </div>
   </header>
 
-  <main class="checkout-page recovery-page">
-    <section class="checkout-hero recovery-hero">
-      <p class="eyebrow">{{ call .T "recovery.eyebrow" }}</p>
-      <h1>{{ call .T "recovery.title" }}</h1>
-      <p>{{ call .T "recovery.subtitle" }}</p>
+  <main class="legal-page">
+    <section class="legal-hero">
+      <p class="eyebrow">{{ .Page.Eyebrow }}</p>
+      <h1>{{ .Page.Title }}</h1>
+      <p>{{ .Page.Intro }}</p>
+      <span>{{ .Page.Updated }}</span>
     </section>
 
-    <section class="recovery-layout" aria-label="{{ call .T "recovery.aria" }}">
-      <form class="license-recovery-card recovery-form-card" action="#" method="post">
-        <h2>{{ call .T "recovery.form.title" }}</h2>
-        <p>{{ call .T "recovery.form.desc" }}</p>
-        <label class="field">
-          <span>{{ call .T "recovery.email" }}</span>
-          <input type="email" name="recovery-email" autocomplete="email" placeholder="{{ call .T "recovery.emailPlaceholder" }}">
-          <small>{{ call .T "recovery.emailHint" }}</small>
-        </label>
-        <label class="field recovery-code-field" data-recovery-code-field hidden>
-          <span>{{ call .T "recovery.code" }}</span>
-          <input type="text" name="recovery-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]{6}" placeholder="{{ call .T "recovery.codePlaceholder" }}">
-          <small>{{ call .T "recovery.codeHint" }}</small>
-        </label>
-        <button class="button button-primary license-recovery-submit" type="button">{{ call .T "recovery.submit" }}</button>
-        <div class="form-status recovery-status" role="status" aria-live="polite"></div>
-        <p class="checkout-note">{{ call .T "recovery.note" }}</p>
-      </form>
-
-      <div class="checkout-assurance recovery-assurance">
-        <article>
-          <strong>{{ call .T "checkout.assurance.delivery.title" }}</strong>
-          <span>{{ call .T "checkout.assurance.delivery.desc" }}</span>
-        </article>
-        <article>
-          <strong>{{ call .T "checkout.assurance.secure.title" }}</strong>
-          <span>{{ call .T "checkout.assurance.secure.desc" }}</span>
-        </article>
-      </div>
-    </section>
+    <article class="legal-document">
+      {{ range .Page.Sections }}
+      <section class="legal-section">
+        <h2>{{ .Title }}</h2>
+        {{ range .Paragraphs }}
+        <p>{{ . }}</p>
+        {{ end }}
+        {{ if .Bullets }}
+        <ul>
+          {{ range .Bullets }}
+          <li>{{ . }}</li>
+          {{ end }}
+        </ul>
+        {{ end }}
+      </section>
+      {{ end }}
+    </article>
   </main>
+
+  <footer class="site-footer">
+    <span>{{ call .T "footer.copyright" }}</span>
+    <nav aria-label="{{ call .T "footer.aria" }}">
+      <a href="{{ .PrivacyPath }}">{{ call .T "footer.privacy" }}</a>
+      <a href="{{ .TermsPath }}">{{ call .T "footer.terms" }}</a>
+      <a href="{{ .LicenseRecoveryPath }}">{{ call .T "footer.licenseRecovery" }}</a>
+      <a href="mailto:support@recoverease.com">{{ call .T "footer.contact" }}</a>
+    </nav>
+  </footer>
 
   <script src="/static/js/main.js"></script>
 </body>

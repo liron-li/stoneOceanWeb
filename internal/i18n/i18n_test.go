@@ -15,6 +15,7 @@ func TestSupportedLanguagesHaveLocalizedVisibleText(t *testing.T) {
 		"workflow.eyebrow",
 		"pricing.eyebrow",
 		"download.eyebrow",
+		"footer.licenseRecovery",
 	}
 
 	for _, lang := range languageDefinitions {
@@ -46,6 +47,7 @@ func TestCheckoutAndRecoveryTextIsLocalized(t *testing.T) {
 		"checkout.account.noLogin",
 		"checkout.account.recoverable",
 		"checkout.email",
+		"checkout.emailPlaceholder",
 		"checkout.emailHint",
 		"checkout.payment.title",
 		"checkout.payment.desc",
@@ -82,7 +84,11 @@ func TestCheckoutAndRecoveryTextIsLocalized(t *testing.T) {
 		"recovery.form.title",
 		"recovery.form.desc",
 		"recovery.email",
+		"recovery.emailPlaceholder",
 		"recovery.emailHint",
+		"recovery.code",
+		"recovery.codePlaceholder",
+		"recovery.codeHint",
 		"recovery.submit",
 		"recovery.note",
 	}
@@ -177,5 +183,21 @@ func TestLanguagePathsAreStable(t *testing.T) {
 
 	if LicenseRecoveryPath("unknown") != "/en/license-recovery" {
 		t.Fatalf("LicenseRecoveryPath(%q) = %q, want /en/license-recovery", "unknown", LicenseRecoveryPath("unknown"))
+	}
+
+	if PrivacyPath("zh") != "/zh/privacy" {
+		t.Fatalf("PrivacyPath(%q) = %q, want /zh/privacy", "zh", PrivacyPath("zh"))
+	}
+
+	if PrivacyPath("unknown") != "/en/privacy" {
+		t.Fatalf("PrivacyPath(%q) = %q, want /en/privacy", "unknown", PrivacyPath("unknown"))
+	}
+
+	if TermsPath("zh") != "/zh/terms" {
+		t.Fatalf("TermsPath(%q) = %q, want /zh/terms", "zh", TermsPath("zh"))
+	}
+
+	if TermsPath("unknown") != "/en/terms" {
+		t.Fatalf("TermsPath(%q) = %q, want /en/terms", "unknown", TermsPath("unknown"))
 	}
 }

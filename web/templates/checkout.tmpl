@@ -72,7 +72,7 @@
           <div class="field-grid compact">
             <label class="field field-wide">
               <span>{{ call .T "checkout.email" }}</span>
-              <input type="email" name="email" autocomplete="email" placeholder="you@example.com">
+              <input type="email" name="email" autocomplete="email" placeholder="{{ call .T "checkout.emailPlaceholder" }}">
               <small>{{ call .T "checkout.emailHint" }}</small>
             </label>
           </div>

@@ -2,8 +2,14 @@ package handlers
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"math/big"
 	"net/http"
+	"strings"
 	"time"
 
 	"stone-ocean-web/internal/events"
@@ -13,8 +19,9 @@ import (
 )
 
 type API struct {
-	store  *store.Store
-	events *events.Bus
+	store                 *store.Store
+	events                *events.Bus
+	recoveryVerifyLimiter *ipRateLimiter
 }
 
 // checkoutRequest 是前端创建订单时提交的 JSON 请求体。
@@ -25,18 +32,29 @@ type checkoutRequest struct {
 	Locale        string              `json:"locale"`
 }
 
-// recoveryRequest 是找回授权码接口使用的 JSON 请求体。
-type recoveryRequest struct {
+// recoveryCodeRequest 是发送找回验证码接口使用的 JSON 请求体。
+type recoveryCodeRequest struct {
+	Email  string `json:"email"`
+	Locale string `json:"locale"`
+}
+
+// recoveryCodeVerifyRequest 是校验找回验证码接口使用的 JSON 请求体。
+type recoveryCodeVerifyRequest struct {
 	Email string `json:"email"`
+	Code  string `json:"code"`
 }
 
 // NewAPI 创建一组依赖 Store 的 API 处理器。
 func NewAPI(appStore *store.Store) *API {
-	return &API{store: appStore}
+	return NewAPIWithEvents(appStore, nil)
 }
 
 func NewAPIWithEvents(appStore *store.Store, eventBus *events.Bus) *API {
-	return &API{store: appStore, events: eventBus}
+	return &API{
+		store:                 appStore,
+		events:                eventBus,
+		recoveryVerifyLimiter: newIPRateLimiter(5, 10*time.Minute),
+	}
 }
 
 // CreateCheckout 根据邮箱、授权类型和支付方式创建待支付订单。
@@ -134,13 +152,13 @@ func (api *API) PaymentResult(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// RecoverLicenses 根据购买邮箱查询历史授权码。
-func (api *API) RecoverLicenses(c *gin.Context) {
+// SendLicenseRecoveryCode 根据购买邮箱发送找回验证码，不直接返回授权码。
+func (api *API) SendLicenseRecoveryCode(c *gin.Context) {
 	if !api.ready(c) {
 		return
 	}
 
-	var req recoveryRequest
+	var req recoveryCodeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recovery request."})
 		return
@@ -152,7 +170,77 @@ func (api *API) RecoverLicenses(c *gin.Context) {
 		return
 	}
 
-	// 将数据库模型转换为前端需要的轻量 JSON 列表。
+	// 无论是否存在购买记录都返回通用成功，避免接口泄露邮箱是否购买过。
+	if len(licenses) == 0 {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+		return
+	}
+
+	code, err := newRecoveryCode()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Something went wrong. Please try again."})
+		return
+	}
+	tokenHash, err := recoveryCodeHash(req.Email, code)
+	if err != nil {
+		api.writeStoreError(c, err)
+		return
+	}
+	expiresAt := time.Now().Add(10 * time.Minute)
+	if _, err := api.store.CreateRecoveryToken(c.Request.Context(), req.Email, tokenHash, expiresAt); err != nil {
+		api.writeStoreError(c, err)
+		return
+	}
+
+	api.publishLicenseRecoveryCode(req.Email, code, req.Locale, expiresAt)
+	c.JSON(http.StatusOK, gin.H{"ok": true})
+}
+
+// VerifyLicenseRecoveryCode 校验邮箱验证码；验证通过后返回该邮箱下的授权码列表。
+func (api *API) VerifyLicenseRecoveryCode(c *gin.Context) {
+	if !api.ready(c) {
+		return
+	}
+
+	now := time.Now()
+	clientIP := c.ClientIP()
+	if !api.recoveryVerifyLimiter.Allow(clientIP, now) {
+		c.JSON(http.StatusTooManyRequests, gin.H{"error": "Too many verification attempts. Please try again later."})
+		return
+	}
+
+	var req recoveryCodeVerifyRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		api.recoveryVerifyLimiter.RecordFailure(clientIP, now)
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid recovery request."})
+		return
+	}
+
+	tokenHash, err := recoveryCodeHash(req.Email, req.Code)
+	if err != nil {
+		api.recoveryVerifyLimiter.RecordFailure(clientIP, now)
+		api.writeStoreError(c, err)
+		return
+	}
+	token, err := api.store.ConsumeRecoveryToken(c.Request.Context(), tokenHash, now)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrNotFound), errors.Is(err, store.ErrTokenExpired), errors.Is(err, store.ErrTokenUsed):
+			api.recoveryVerifyLimiter.RecordFailure(clientIP, now)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or expired verification code."})
+		default:
+			api.writeStoreError(c, err)
+		}
+		return
+	}
+	api.recoveryVerifyLimiter.Reset(clientIP)
+
+	licenses, err := api.store.FindLicensesByEmail(c.Request.Context(), token.Email)
+	if err != nil {
+		api.writeStoreError(c, err)
+		return
+	}
+
 	items := make([]gin.H, 0, len(licenses))
 	for i := range licenses {
 		items = append(items, licenseResponse(&licenses[i]))
@@ -163,7 +251,6 @@ func (api *API) RecoverLicenses(c *gin.Context) {
 	})
 }
 
-// ready 统一检查 API 是否已经接入可用数据库。
 func (api *API) ready(c *gin.Context) bool {
 	if api == nil || api.store == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "Database is not enabled."})
@@ -172,7 +259,6 @@ func (api *API) ready(c *gin.Context) bool {
 	return true
 }
 
-// writeStoreError 将 store 层错误转换成对外 HTTP 状态码和通用提示。
 func (api *API) writeStoreError(c *gin.Context, err error) {
 	switch {
 	case errors.Is(err, store.ErrInvalidInput), errors.Is(err, store.ErrPaymentMethod):
@@ -191,6 +277,18 @@ func (api *API) publishPaymentPaid(license *store.License) {
 	api.events.PublishPaymentPaid(events.PaymentPaidEvent{License: license})
 }
 
+func (api *API) publishLicenseRecoveryCode(email, code, locale string, expiresAt time.Time) {
+	if api == nil || api.events == nil {
+		return
+	}
+	api.events.PublishLicenseRecoveryCode(events.LicenseRecoveryCodeEvent{
+		Email:     email,
+		Code:      code,
+		Locale:    store.NormalizeLocale(locale),
+		ExpiresAt: expiresAt,
+	})
+}
+
 func (api *API) paymentAlreadyDelivered(ctx context.Context, paymentNo string) bool {
 	result, err := api.store.FindPaymentResult(ctx, paymentNo)
 	if err != nil {
@@ -199,7 +297,6 @@ func (api *API) paymentAlreadyDelivered(ctx context.Context, paymentNo string) b
 	return result.Payment.Status == store.PaymentStatusPaid && result.License != nil
 }
 
-// planCodeForLicense 把页面上的授权类型映射到默认套餐 code。
 func planCodeForLicense(kind store.LicenseKind) (string, bool) {
 	switch kind {
 	case store.LicenseKindMonthly:
@@ -211,7 +308,33 @@ func planCodeForLicense(kind store.LicenseKind) (string, bool) {
 	}
 }
 
-// licenseResponse 统一授权码接口响应字段，时间字段使用 RFC3339 格式。
+func newRecoveryCode() (string, error) {
+	value, err := rand.Int(rand.Reader, big.NewInt(1000000))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%06d", value.Int64()), nil
+}
+
+func recoveryCodeHash(email, code string) (string, error) {
+	normalizedEmail, err := store.NormalizeEmail(email)
+	if err != nil {
+		return "", err
+	}
+	code = strings.TrimSpace(code)
+	if len(code) != 6 {
+		return "", fmt.Errorf("%w: code must be six digits", store.ErrInvalidInput)
+	}
+	for _, char := range code {
+		if char < '0' || char > '9' {
+			return "", fmt.Errorf("%w: code must be six digits", store.ErrInvalidInput)
+		}
+	}
+
+	sum := sha256.Sum256([]byte(normalizedEmail + ":" + code))
+	return hex.EncodeToString(sum[:]), nil
+}
+
 func licenseResponse(license *store.License) gin.H {
 	var expiresAt any
 	if license.ExpiresAt != nil {

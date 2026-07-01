@@ -144,14 +144,26 @@ Content-Type: application/json
 POST /api/payments/{paymentNo}/confirm
 ```
 
-通过购买邮箱找回激活码：
+通过购买邮箱找回激活码，先发送验证码：
 
 ```http
-POST /api/license-recovery
+POST /api/license-recovery/verification-code
 Content-Type: application/json
 
 {
   "email": "buyer@example.com"
+}
+```
+
+再用验证码查询激活码：
+
+```http
+POST /api/license-recovery/verification-code/verify
+Content-Type: application/json
+
+{
+  "email": "buyer@example.com",
+  "code": "123456"
 }
 ```
 

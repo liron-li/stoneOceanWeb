@@ -53,6 +53,26 @@ func (m *SMTPMailer) SendLicense(ctx context.Context, license *store.License) er
 	return m.send(ctx, []string{to}, message)
 }
 
+func (m *SMTPMailer) SendRecoveryCode(ctx context.Context, email, code, locale string, expiresAt time.Time) error {
+	if m == nil || !m.cfg.Enabled {
+		return nil
+	}
+	if err := m.validate(); err != nil {
+		return err
+	}
+
+	to := strings.TrimSpace(email)
+	if to == "" {
+		return errors.New("recovery code email recipient is empty")
+	}
+
+	message, err := m.buildRecoveryCodeMessage(to, code, locale, expiresAt)
+	if err != nil {
+		return err
+	}
+	return m.send(ctx, []string{to}, message)
+}
+
 func (m *SMTPMailer) validate() error {
 	if strings.TrimSpace(m.cfg.Host) == "" {
 		return errors.New("email host is required")
@@ -120,6 +140,54 @@ func (m *SMTPMailer) buildLicenseMessage(to string, license *store.License) ([]b
 	return []byte(builder.String()), nil
 }
 
+func (m *SMTPMailer) buildRecoveryCodeMessage(to, code, locale string, expiresAt time.Time) ([]byte, error) {
+	from := mail.Address{Name: m.cfg.FromName, Address: m.cfg.FromAddress}
+	recipient := mail.Address{Address: to}
+	copy := recoveryCodeEmailCopy(locale)
+	boundary := "recoverease-recovery-code-boundary"
+
+	headers := map[string]string{
+		"From":         from.String(),
+		"To":           recipient.String(),
+		"Subject":      mime.QEncoding.Encode("UTF-8", copy.Subject),
+		"Date":         time.Now().Format(time.RFC1123Z),
+		"MIME-Version": "1.0",
+		"Content-Type": fmt.Sprintf(`multipart/alternative; boundary="%s"`, boundary),
+	}
+	if strings.TrimSpace(m.cfg.ReplyTo) != "" {
+		headers["Reply-To"] = strings.TrimSpace(m.cfg.ReplyTo)
+	}
+
+	var builder strings.Builder
+	for _, key := range []string{"From", "To", "Reply-To", "Subject", "Date", "MIME-Version", "Content-Type"} {
+		value, ok := headers[key]
+		if !ok {
+			continue
+		}
+		builder.WriteString(key)
+		builder.WriteString(": ")
+		builder.WriteString(value)
+		builder.WriteString("\r\n")
+	}
+	builder.WriteString("\r\n")
+	builder.WriteString("--")
+	builder.WriteString(boundary)
+	builder.WriteString("\r\n")
+	builder.WriteString("Content-Type: text/plain; charset=\"UTF-8\"\r\n")
+	builder.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
+	builder.WriteString(recoveryCodeEmailTextBody(code, expiresAt, copy))
+	builder.WriteString("\r\n--")
+	builder.WriteString(boundary)
+	builder.WriteString("\r\n")
+	builder.WriteString("Content-Type: text/html; charset=\"UTF-8\"\r\n")
+	builder.WriteString("Content-Transfer-Encoding: 8bit\r\n\r\n")
+	builder.WriteString(recoveryCodeEmailHTMLBody(code, expiresAt, copy))
+	builder.WriteString("\r\n--")
+	builder.WriteString(boundary)
+	builder.WriteString("--\r\n")
+	return []byte(builder.String()), nil
+}
+
 type emailCopy struct {
 	Subject        string
 	Preheader      string
@@ -135,6 +203,151 @@ type emailCopy struct {
 	PlainThanks    string
 	ResultPageNote string
 	Team           string
+}
+
+type recoveryCodeCopy struct {
+	Subject       string
+	Preheader     string
+	Title         string
+	Subtitle      string
+	CodeLabel     string
+	ExpiresLabel  string
+	IgnoreNotice  string
+	PlainGreeting string
+	PlainIntro    string
+	PlainExpires  string
+	Team          string
+}
+
+func recoveryCodeEmailCopy(locale string) recoveryCodeCopy {
+	switch store.NormalizeLocale(locale) {
+	case "zh":
+		return recoveryCodeCopy{
+			Subject:       "您的 RecoverEase 找回验证码",
+			Preheader:     "使用此验证码查看您的历史激活码。",
+			Title:         "验证您的购买邮箱",
+			Subtitle:      "请输入以下验证码以查看该邮箱下的历史激活码。",
+			CodeLabel:     "验证码",
+			ExpiresLabel:  "有效期至",
+			IgnoreNotice:  "如果不是您发起的请求，可以忽略这封邮件。",
+			PlainGreeting: "您好，",
+			PlainIntro:    "请使用以下验证码完成 RecoverEase 激活码找回：",
+			PlainExpires:  "验证码有效期至",
+			Team:          "RecoverEase 团队",
+		}
+	case "ja":
+		return recoveryCodeCopy{
+			Subject:       "RecoverEase 復元確認コード",
+			Preheader:     "このコードで過去のライセンスキーを表示できます。",
+			Title:         "購入メールを確認してください",
+			Subtitle:      "以下の確認コードを入力すると、このメールのライセンス履歴を表示できます。",
+			CodeLabel:     "確認コード",
+			ExpiresLabel:  "有効期限",
+			IgnoreNotice:  "このリクエストに心当たりがない場合は、このメールを無視してください。",
+			PlainGreeting: "こんにちは、",
+			PlainIntro:    "RecoverEase のライセンス復元には次の確認コードを使用してください。",
+			PlainExpires:  "コードの有効期限",
+			Team:          "RecoverEase チーム",
+		}
+	case "ko":
+		return recoveryCodeCopy{
+			Subject:       "RecoverEase 복구 인증 코드",
+			Preheader:     "이 코드로 이전 라이선스 키를 확인할 수 있습니다.",
+			Title:         "구매 이메일을 확인하세요",
+			Subtitle:      "아래 인증 코드를 입력하면 이 이메일의 라이선스 기록을 볼 수 있습니다.",
+			CodeLabel:     "인증 코드",
+			ExpiresLabel:  "만료 시간",
+			IgnoreNotice:  "요청한 적이 없다면 이 이메일을 무시하세요.",
+			PlainGreeting: "안녕하세요,",
+			PlainIntro:    "RecoverEase 라이선스 복구에 다음 인증 코드를 사용하세요.",
+			PlainExpires:  "코드 만료 시간",
+			Team:          "RecoverEase 팀",
+		}
+	case "de":
+		return recoveryCodeCopy{
+			Subject:       "Ihr RecoverEase-Bestaetigungscode",
+			Preheader:     "Mit diesem Code sehen Sie Ihre bisherigen Lizenzschluessel.",
+			Title:         "Kauf-E-Mail bestaetigen",
+			Subtitle:      "Geben Sie diesen Code ein, um die Lizenzhistorie dieser E-Mail anzuzeigen.",
+			CodeLabel:     "Bestaetigungscode",
+			ExpiresLabel:  "Gueltig bis",
+			IgnoreNotice:  "Wenn Sie diese Anfrage nicht gestellt haben, koennen Sie diese E-Mail ignorieren.",
+			PlainGreeting: "Hallo,",
+			PlainIntro:    "Verwenden Sie diesen Code, um Ihre RecoverEase-Lizenzschluessel wiederherzustellen:",
+			PlainExpires:  "Code gueltig bis",
+			Team:          "RecoverEase Team",
+		}
+	case "fr":
+		return recoveryCodeCopy{
+			Subject:       "Votre code de verification RecoverEase",
+			Preheader:     "Ce code permet d'afficher vos anciennes cles de licence.",
+			Title:         "Verifiez votre e-mail d'achat",
+			Subtitle:      "Saisissez ce code pour afficher l'historique des licences de cet e-mail.",
+			CodeLabel:     "Code de verification",
+			ExpiresLabel:  "Valable jusqu'a",
+			IgnoreNotice:  "Si vous n'etes pas a l'origine de cette demande, ignorez cet e-mail.",
+			PlainGreeting: "Bonjour,",
+			PlainIntro:    "Utilisez ce code pour recuperer vos cles RecoverEase :",
+			PlainExpires:  "Code valable jusqu'a",
+			Team:          "Equipe RecoverEase",
+		}
+	case "es":
+		return recoveryCodeCopy{
+			Subject:       "Tu codigo de verificacion de RecoverEase",
+			Preheader:     "Usa este codigo para ver tus claves de licencia anteriores.",
+			Title:         "Verifica tu correo de compra",
+			Subtitle:      "Introduce este codigo para ver el historial de licencias de este correo.",
+			CodeLabel:     "Codigo de verificacion",
+			ExpiresLabel:  "Valido hasta",
+			IgnoreNotice:  "Si no solicitaste esto, puedes ignorar este correo.",
+			PlainGreeting: "Hola,",
+			PlainIntro:    "Usa este codigo para recuperar tus claves de RecoverEase:",
+			PlainExpires:  "Codigo valido hasta",
+			Team:          "Equipo de RecoverEase",
+		}
+	case "pt":
+		return recoveryCodeCopy{
+			Subject:       "Seu codigo de verificacao RecoverEase",
+			Preheader:     "Use este codigo para ver suas chaves de licenca anteriores.",
+			Title:         "Verifique o e-mail da compra",
+			Subtitle:      "Digite este codigo para ver o historico de licencas deste e-mail.",
+			CodeLabel:     "Codigo de verificacao",
+			ExpiresLabel:  "Valido ate",
+			IgnoreNotice:  "Se voce nao fez esta solicitacao, ignore este e-mail.",
+			PlainGreeting: "Ola,",
+			PlainIntro:    "Use este codigo para recuperar suas chaves RecoverEase:",
+			PlainExpires:  "Codigo valido ate",
+			Team:          "Equipe RecoverEase",
+		}
+	case "ru":
+		return recoveryCodeCopy{
+			Subject:       "Код подтверждения RecoverEase",
+			Preheader:     "Используйте этот код, чтобы посмотреть прошлые лицензионные ключи.",
+			Title:         "Подтвердите e-mail покупки",
+			Subtitle:      "Введите этот код, чтобы увидеть историю лицензий для этого e-mail.",
+			CodeLabel:     "Код подтверждения",
+			ExpiresLabel:  "Действует до",
+			IgnoreNotice:  "Если вы не запрашивали код, просто проигнорируйте это письмо.",
+			PlainGreeting: "Здравствуйте,",
+			PlainIntro:    "Используйте этот код для восстановления ключей RecoverEase:",
+			PlainExpires:  "Код действует до",
+			Team:          "Команда RecoverEase",
+		}
+	default:
+		return recoveryCodeCopy{
+			Subject:       "Your RecoverEase verification code",
+			Preheader:     "Use this code to view your historical license keys.",
+			Title:         "Verify your purchase email",
+			Subtitle:      "Enter this code to view the license history for this email address.",
+			CodeLabel:     "Verification code",
+			ExpiresLabel:  "Expires",
+			IgnoreNotice:  "If you did not request this code, you can ignore this email.",
+			PlainGreeting: "Hi,",
+			PlainIntro:    "Use this code to recover your RecoverEase license keys:",
+			PlainExpires:  "Code expires",
+			Team:          "RecoverEase Team",
+		}
+	}
 }
 
 func licenseEmailCopy(locale string) emailCopy {
@@ -423,6 +636,95 @@ func licenseEmailHTMLBody(license *store.License, copy emailCopy) string {
 		expiresLabel,
 		expires,
 		resultPageNote,
+		team,
+	)
+}
+
+func recoveryCodeEmailTextBody(code string, expiresAt time.Time, copy recoveryCodeCopy) string {
+	return fmt.Sprintf(`%s
+
+%s
+
+%s:
+%s
+
+%s: %s
+
+%s
+
+%s
+`,
+		copy.PlainGreeting,
+		copy.PlainIntro,
+		copy.CodeLabel,
+		code,
+		copy.PlainExpires,
+		expiresAt.Format("2006-01-02 15:04 MST"),
+		copy.IgnoreNotice,
+		copy.Team,
+	)
+}
+
+func recoveryCodeEmailHTMLBody(code string, expiresAt time.Time, copy recoveryCodeCopy) string {
+	preheader := html.EscapeString(copy.Preheader)
+	title := html.EscapeString(copy.Title)
+	subtitle := html.EscapeString(copy.Subtitle)
+	codeLabel := html.EscapeString(copy.CodeLabel)
+	expiresLabel := html.EscapeString(copy.ExpiresLabel)
+	ignoreNotice := html.EscapeString(copy.IgnoreNotice)
+	team := html.EscapeString(copy.Team)
+	escapedCode := html.EscapeString(code)
+	expires := html.EscapeString(expiresAt.Format("2006-01-02 15:04 MST"))
+
+	return fmt.Sprintf(`<!doctype html>
+<html>
+  <body style="margin:0;background:#f4f7fb;color:#111827;font-family:Inter,Segoe UI,Arial,sans-serif;">
+    <span style="display:none!important;visibility:hidden;opacity:0;height:0;width:0;overflow:hidden;">%s</span>
+    <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="background:#f4f7fb;padding:32px 16px;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="max-width:600px;background:#ffffff;border:1px solid #e6edf5;border-radius:18px;overflow:hidden;box-shadow:0 18px 50px rgba(15,23,42,0.10);">
+            <tr>
+              <td style="padding:28px 32px;background:#eef6ff;border-bottom:1px solid #dbeafe;">
+                <div style="font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#156dff;">RecoverEase</div>
+                <h1 style="margin:10px 0 0;font-size:26px;line-height:1.25;color:#0d1321;">%s</h1>
+                <p style="margin:12px 0 0;font-size:15px;line-height:1.7;color:#526070;">%s</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px 32px;">
+                <div style="margin-bottom:22px;padding:22px;border:1px solid #8bbcff;border-radius:14px;background:#f8fbff;text-align:center;">
+                  <div style="margin-bottom:10px;font-size:13px;font-weight:800;color:#526070;text-transform:uppercase;letter-spacing:.06em;">%s</div>
+                  <div style="font-family:SFMono-Regular,Consolas,Liberation Mono,monospace;font-size:34px;line-height:1.2;font-weight:900;color:#071b4f;letter-spacing:.14em;">%s</div>
+                </div>
+                <table role="presentation" width="100%%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                  <tr>
+                    <td style="padding:12px 0;border-bottom:1px solid #e6edf5;color:#667085;font-size:14px;">%s</td>
+                    <td align="right" style="padding:12px 0;border-bottom:1px solid #e6edf5;color:#0d1321;font-size:14px;font-weight:700;">%s</td>
+                  </tr>
+                </table>
+                <p style="margin:24px 0 0;font-size:14px;line-height:1.7;color:#526070;">%s</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:18px 32px;background:#f8fafc;border-top:1px solid #e6edf5;color:#667085;font-size:13px;line-height:1.6;">
+                %s
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`,
+		preheader,
+		title,
+		subtitle,
+		codeLabel,
+		escapedCode,
+		expiresLabel,
+		expires,
+		ignoreNotice,
 		team,
 	)
 }

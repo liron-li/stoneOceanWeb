@@ -5,6 +5,7 @@
   --text: #111827;
   --muted: #667085;
   --subtle: #8a95a6;
+  --placeholder: #b1bac7;
   --line: #e6edf5;
   --line-strong: #cfdbea;
   --surface: #ffffff;
@@ -27,6 +28,7 @@ body[data-theme="dark"] {
   --text: #edf3fb;
   --muted: #a5b0c0;
   --subtle: #79869a;
+  --placeholder: #5b6677;
   --line: #243244;
   --line-strong: #34465e;
   --surface: #0f1724;
@@ -314,19 +316,27 @@ body[data-theme="dark"] .theme-toggle {
 }
 
 body[data-theme="dark"] .theme-toggle-icon {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
   background: currentColor;
-  box-shadow:
-    0 -8px 0 -5px currentColor,
-    0 8px 0 -5px currentColor,
-    8px 0 0 -5px currentColor,
-    -8px 0 0 -5px currentColor,
-    6px 6px 0 -5px currentColor,
-    -6px -6px 0 -5px currentColor,
-    6px -6px 0 -5px currentColor,
-    -6px 6px 0 -5px currentColor;
+  box-shadow: none;
   transform: none;
+}
+
+body[data-theme="dark"] .theme-toggle-icon::before,
+body[data-theme="dark"] .theme-toggle-icon::after {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  background:
+    linear-gradient(currentColor, currentColor) top center / 2px 4px no-repeat,
+    linear-gradient(currentColor, currentColor) bottom center / 2px 4px no-repeat,
+    linear-gradient(currentColor, currentColor) left center / 4px 2px no-repeat,
+    linear-gradient(currentColor, currentColor) right center / 4px 2px no-repeat;
+}
+
+body[data-theme="dark"] .theme-toggle-icon::after {
+  transform: rotate(45deg);
 }
 
 .locale-menu summary:focus-visible,
@@ -898,6 +908,75 @@ body[data-theme="dark"] .timeline li > span {
   gap: 18px;
 }
 
+.legal-page {
+  width: min(920px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 132px 0 86px;
+}
+
+.legal-hero {
+  padding-bottom: 34px;
+  border-bottom: 1px solid var(--line);
+}
+
+.legal-hero h1 {
+  max-width: 760px;
+  margin-top: 10px;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 0.98;
+}
+
+.legal-hero p {
+  max-width: 760px;
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.75;
+}
+
+.legal-hero span {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--subtle);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.legal-document {
+  display: grid;
+  gap: 34px;
+  padding-top: 42px;
+}
+
+.legal-section h2 {
+  margin: 0 0 12px;
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1.25;
+}
+
+.legal-section p,
+.legal-section li {
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.78;
+}
+
+.legal-section p {
+  margin: 0 0 12px;
+}
+
+.legal-section ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 22px;
+}
+
+.legal-section li::marker {
+  color: var(--blue);
+}
+
 .checkout-page {
   width: min(1180px, calc(100% - 40px));
   margin: 0 auto;
@@ -1046,6 +1125,13 @@ body[data-theme="dark"] .timeline li > span {
   font: inherit;
   outline: none;
   transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--placeholder);
+  font-weight: 500;
+  opacity: 1;
 }
 
 .field input:focus,
@@ -1405,6 +1491,18 @@ body[data-theme="dark"] .timeline li > span {
 
 .recovery-form-card .field {
   max-width: 520px;
+}
+
+.recovery-code-field input {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.recovery-code-field input::placeholder {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .recovery-form-card .checkout-note {
@@ -1903,6 +2001,33 @@ body[data-theme="dark"] .license-key-row strong {
   .site-footer nav {
     justify-content: flex-start;
     gap: 12px 16px;
+  }
+
+  .legal-page {
+    width: min(100% - 32px, 920px);
+    padding: 52px 0 64px;
+  }
+
+  .legal-hero {
+    padding-bottom: 26px;
+  }
+
+  .legal-hero h1 {
+    font-size: 34px;
+    line-height: 1.05;
+  }
+
+  .legal-hero p {
+    font-size: 15px;
+  }
+
+  .legal-document {
+    gap: 28px;
+    padding-top: 32px;
+  }
+
+  .legal-section h2 {
+    font-size: 20px;
   }
 
   .checkout-page {

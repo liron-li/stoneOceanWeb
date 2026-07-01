@@ -151,6 +151,7 @@ var en = map[string]string{
 	"footer.privacy":            "Privacy Policy",
 	"footer.terms":              "Terms of Service",
 	"footer.contact":            "Contact Us",
+	"footer.licenseRecovery":    "Recover license key",
 }
 
 var translations = map[string]map[string]string{
@@ -184,6 +185,7 @@ func init() {
 	})
 	applyRecoveryModeOverrides()
 	applyDownloadCtaOverrides()
+	applyFooterContent()
 	applyCheckoutContent()
 }
 
@@ -318,6 +320,28 @@ func applyDownloadCtaOverrides() {
 	}
 }
 
+var footerContent = map[string]map[string]string{
+	"en": {"footer.licenseRecovery": "Recover license key"},
+	"zh": {"footer.licenseRecovery": "找回激活码"},
+	"ja": {"footer.licenseRecovery": "ライセンスキーを復元"},
+	"ko": {"footer.licenseRecovery": "라이선스 키 찾기"},
+	"de": {"footer.licenseRecovery": "Lizenzschlüssel wiederherstellen"},
+	"fr": {"footer.licenseRecovery": "Récupérer la clé"},
+	"es": {"footer.licenseRecovery": "Recuperar clave"},
+	"pt": {"footer.licenseRecovery": "Recuperar chave"},
+	"ru": {"footer.licenseRecovery": "Восстановить ключ"},
+}
+
+func applyFooterContent() {
+	for code, labels := range footerContent {
+		if locale, ok := translations[code]; ok {
+			for key, value := range labels {
+				locale[key] = value
+			}
+		}
+	}
+}
+
 var checkoutContent = map[string]map[string]string{
 	"en": {
 		"checkout.meta.title":               "RecoverEase Pro Checkout",
@@ -334,6 +358,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "No account required",
 		"checkout.account.recoverable":      "License key sent by email",
 		"checkout.email":                    "Email address",
+		"checkout.emailPlaceholder":         "Enter your purchase email",
 		"checkout.emailHint":                "Use an email you can access later if you need your license key resent.",
 		"checkout.name":                     "Receipt name",
 		"checkout.payment.title":            "Payment method",
@@ -421,6 +446,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "无需注册账号",
 		"checkout.account.recoverable":      "激活码邮件交付",
 		"checkout.email":                    "邮箱地址",
+		"checkout.emailPlaceholder":         "请输入购买时使用的邮箱",
 		"checkout.emailHint":                "请填写以后还能访问的邮箱，方便重新发送激活码。",
 		"checkout.name":                     "收据姓名",
 		"checkout.payment.title":            "选择支付方式",
@@ -508,6 +534,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "アカウント不要",
 		"checkout.account.recoverable":      "ライセンスキーをメールで送信",
 		"checkout.email":                    "メールアドレス",
+		"checkout.emailPlaceholder":         "購入時に使用するメールを入力",
 		"checkout.emailHint":                "後でライセンスキーを再送できるよう、利用可能なメールを入力してください。",
 		"checkout.name":                     "領収書名",
 		"checkout.payment.title":            "支払い方法",
@@ -575,6 +602,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "계정 필요 없음",
 		"checkout.account.recoverable":      "라이선스 키 이메일 발송",
 		"checkout.email":                    "이메일 주소",
+		"checkout.emailPlaceholder":         "구매에 사용할 이메일 입력",
 		"checkout.emailHint":                "나중에 라이선스 키를 다시 받을 수 있도록 접근 가능한 이메일을 입력하세요.",
 		"checkout.name":                     "영수증 이름",
 		"checkout.payment.title":            "결제 방법",
@@ -642,6 +670,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "Kein Konto erforderlich",
 		"checkout.account.recoverable":      "Lizenzschlüssel per E-Mail",
 		"checkout.email":                    "E-Mail-Adresse",
+		"checkout.emailPlaceholder":         "Kauf-E-Mail eingeben",
 		"checkout.emailHint":                "Nutzen Sie eine E-Mail, auf die Sie später zugreifen können, falls der Lizenzschlüssel erneut gesendet werden muss.",
 		"checkout.name":                     "Name für Beleg",
 		"checkout.payment.title":            "Zahlungsmethode",
@@ -709,6 +738,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "Aucun compte requis",
 		"checkout.account.recoverable":      "Clé envoyée par e-mail",
 		"checkout.email":                    "Adresse e-mail",
+		"checkout.emailPlaceholder":         "Saisissez l'e-mail d'achat",
 		"checkout.emailHint":                "Utilisez un e-mail accessible plus tard si vous devez recevoir à nouveau votre clé.",
 		"checkout.name":                     "Nom du reçu",
 		"checkout.payment.title":            "Mode de paiement",
@@ -776,6 +806,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "No requiere cuenta",
 		"checkout.account.recoverable":      "Clave enviada por correo",
 		"checkout.email":                    "Correo electrónico",
+		"checkout.emailPlaceholder":         "Introduce el correo de compra",
 		"checkout.emailHint":                "Usa un correo al que puedas acceder más tarde si necesitas reenviar la clave.",
 		"checkout.name":                     "Nombre del recibo",
 		"checkout.payment.title":            "Método de pago",
@@ -843,6 +874,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "Sem conta obrigatória",
 		"checkout.account.recoverable":      "Chave enviada por e-mail",
 		"checkout.email":                    "Endereço de e-mail",
+		"checkout.emailPlaceholder":         "Informe o e-mail da compra",
 		"checkout.emailHint":                "Use um e-mail que você consiga acessar depois, caso precise reenviar a chave.",
 		"checkout.name":                     "Nome no recibo",
 		"checkout.payment.title":            "Método de pagamento",
@@ -910,6 +942,7 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.account.noLogin":          "Аккаунт не нужен",
 		"checkout.account.recoverable":      "Ключ отправляется по e-mail",
 		"checkout.email":                    "Адрес e-mail",
+		"checkout.emailPlaceholder":         "Введите e-mail покупки",
 		"checkout.emailHint":                "Используйте e-mail, к которому сможете получить доступ позже для повторной отправки ключа.",
 		"checkout.name":                     "Имя для квитанции",
 		"checkout.payment.title":            "Способ оплаты",
@@ -1174,6 +1207,108 @@ var checkoutSuccessContent = map[string]map[string]string{
 	},
 }
 
+var recoveryVerificationContent = map[string]map[string]string{
+	"en": {
+		"checkout.recovery.desc":    "Enter the purchase email to receive a verification code before viewing your license key and purchase record.",
+		"recovery.subtitle":         "Enter the email used at purchase. We will send a verification code before showing your license history.",
+		"recovery.form.desc":        "No password is needed. The verification code is sent only to the purchase email.",
+		"recovery.submit":           "Send verification code",
+		"recovery.note":             "If the email matches a purchase, the verification code will arrive in a few minutes.",
+		"recovery.emailPlaceholder": "Enter your purchase email",
+		"recovery.code":             "Verification code",
+		"recovery.codePlaceholder":  "Enter the 6-digit email code",
+		"recovery.codeHint":         "Enter the 6-digit code sent to your purchase email.",
+	},
+	"zh": {
+		"checkout.recovery.desc":    "输入购买时使用的邮箱，先接收验证码，验证后查看激活码和购买记录。",
+		"recovery.subtitle":         "输入购买时使用的邮箱，我们会先发送验证码，验证通过后再显示历史激活码。",
+		"recovery.form.desc":        "无需密码。验证码只会发送到购买时使用的邮箱。",
+		"recovery.submit":           "发送验证码",
+		"recovery.note":             "如果该邮箱存在购买记录，验证码会在几分钟内发送。",
+		"recovery.emailPlaceholder": "请输入购买时使用的邮箱",
+		"recovery.code":             "验证码",
+		"recovery.codePlaceholder":  "请输入邮件中的 6 位验证码",
+		"recovery.codeHint":         "请输入发送到购买邮箱的 6 位验证码。",
+	},
+	"ja": {
+		"checkout.recovery.desc":    "購入時のメールを入力し、確認コードで認証してからライセンスキーと購入記録を表示します。",
+		"recovery.subtitle":         "購入時に使用したメールを入力してください。確認コードで認証後、ライセンス履歴を表示します。",
+		"recovery.form.desc":        "パスワードは不要です。確認コードは購入時のメールにのみ送信されます。",
+		"recovery.submit":           "確認コードを送信",
+		"recovery.note":             "メールが購入記録と一致する場合、確認コードが数分以内に届きます。",
+		"recovery.emailPlaceholder": "購入時のメールを入力",
+		"recovery.code":             "確認コード",
+		"recovery.codePlaceholder":  "メールの6桁コードを入力",
+		"recovery.codeHint":         "購入メールに届いた 6 桁のコードを入力してください。",
+	},
+	"ko": {
+		"checkout.recovery.desc":    "구매 이메일을 입력하고 인증 코드를 받은 뒤 라이선스 키와 구매 기록을 확인하세요.",
+		"recovery.subtitle":         "구매 시 사용한 이메일을 입력하세요. 인증 후 라이선스 기록을 보여드립니다.",
+		"recovery.form.desc":        "비밀번호는 필요 없습니다. 인증 코드는 구매 이메일로만 전송됩니다.",
+		"recovery.submit":           "인증 코드 보내기",
+		"recovery.note":             "해당 이메일에 구매 기록이 있으면 몇 분 안에 인증 코드가 도착합니다.",
+		"recovery.emailPlaceholder": "구매 이메일 입력",
+		"recovery.code":             "인증 코드",
+		"recovery.codePlaceholder":  "이메일의 6자리 코드 입력",
+		"recovery.codeHint":         "구매 이메일로 받은 6자리 코드를 입력하세요.",
+	},
+	"de": {
+		"checkout.recovery.desc":    "Geben Sie die Kauf-E-Mail ein und bestaetigen Sie sie per Code, bevor Lizenzschluessel und Kaufdaten angezeigt werden.",
+		"recovery.subtitle":         "Geben Sie die beim Kauf verwendete E-Mail ein. Nach der Code-Bestaetigung zeigen wir Ihre Lizenzhistorie.",
+		"recovery.form.desc":        "Kein Passwort erforderlich. Der Bestaetigungscode wird nur an die Kauf-E-Mail gesendet.",
+		"recovery.submit":           "Bestaetigungscode senden",
+		"recovery.note":             "Wenn die E-Mail zu einem Kauf passt, trifft der Code in wenigen Minuten ein.",
+		"recovery.emailPlaceholder": "Kauf-E-Mail eingeben",
+		"recovery.code":             "Bestaetigungscode",
+		"recovery.codePlaceholder":  "6-stelligen E-Mail-Code eingeben",
+		"recovery.codeHint":         "Geben Sie den 6-stelligen Code aus der Kauf-E-Mail ein.",
+	},
+	"fr": {
+		"checkout.recovery.desc":    "Saisissez l'e-mail d'achat et confirmez-le avec un code avant d'afficher vos cles et votre historique.",
+		"recovery.subtitle":         "Saisissez l'e-mail utilise lors de l'achat. Nous afficherons l'historique apres verification du code.",
+		"recovery.form.desc":        "Aucun mot de passe n'est requis. Le code est envoye uniquement a l'e-mail d'achat.",
+		"recovery.submit":           "Envoyer le code",
+		"recovery.note":             "Si l'e-mail correspond a un achat, le code arrivera dans quelques minutes.",
+		"recovery.emailPlaceholder": "Saisissez l'e-mail d'achat",
+		"recovery.code":             "Code de verification",
+		"recovery.codePlaceholder":  "Saisissez le code e-mail a 6 chiffres",
+		"recovery.codeHint":         "Saisissez le code a 6 chiffres envoye a l'e-mail d'achat.",
+	},
+	"es": {
+		"checkout.recovery.desc":    "Introduce el correo de compra y verificalo con un codigo antes de ver tu clave e historial.",
+		"recovery.subtitle":         "Introduce el correo usado en la compra. Mostraremos el historial despues de verificar el codigo.",
+		"recovery.form.desc":        "No se necesita contraseña. El codigo solo se envia al correo de compra.",
+		"recovery.submit":           "Enviar codigo",
+		"recovery.note":             "Si el correo coincide con una compra, el codigo llegara en unos minutos.",
+		"recovery.emailPlaceholder": "Introduce el correo de compra",
+		"recovery.code":             "Codigo de verificacion",
+		"recovery.codePlaceholder":  "Introduce el codigo de 6 digitos",
+		"recovery.codeHint":         "Introduce el codigo de 6 digitos enviado al correo de compra.",
+	},
+	"pt": {
+		"checkout.recovery.desc":    "Informe o e-mail da compra e confirme com um codigo antes de ver sua chave e registro.",
+		"recovery.subtitle":         "Informe o e-mail usado na compra. Mostraremos o historico depois de verificar o codigo.",
+		"recovery.form.desc":        "Nenhuma senha e necessaria. O codigo e enviado apenas ao e-mail da compra.",
+		"recovery.submit":           "Enviar codigo",
+		"recovery.note":             "Se o e-mail corresponder a uma compra, o codigo chegara em alguns minutos.",
+		"recovery.emailPlaceholder": "Informe o e-mail da compra",
+		"recovery.code":             "Codigo de verificacao",
+		"recovery.codePlaceholder":  "Digite o codigo de 6 digitos",
+		"recovery.codeHint":         "Digite o codigo de 6 digitos enviado ao e-mail da compra.",
+	},
+	"ru": {
+		"checkout.recovery.desc":    "Введите e-mail покупки и подтвердите его кодом, чтобы увидеть ключ и историю покупки.",
+		"recovery.subtitle":         "Введите e-mail, использованный при покупке. После проверки кода мы покажем историю лицензий.",
+		"recovery.form.desc":        "Пароль не нужен. Код подтверждения отправляется только на e-mail покупки.",
+		"recovery.submit":           "Отправить код",
+		"recovery.note":             "Если e-mail соответствует покупке, код придет в течение нескольких минут.",
+		"recovery.emailPlaceholder": "Введите e-mail покупки",
+		"recovery.code":             "Код подтверждения",
+		"recovery.codePlaceholder":  "Введите 6-значный код из письма",
+		"recovery.codeHint":         "Введите 6-значный код, отправленный на e-mail покупки.",
+	},
+}
+
 func applyCheckoutContent() {
 	for code, labels := range checkoutContent {
 		if locale, ok := translations[code]; ok {
@@ -1183,6 +1318,13 @@ func applyCheckoutContent() {
 		}
 	}
 	for code, labels := range checkoutSuccessContent {
+		if locale, ok := translations[code]; ok {
+			for key, value := range labels {
+				locale[key] = value
+			}
+		}
+	}
+	for code, labels := range recoveryVerificationContent {
 		if locale, ok := translations[code]; ok {
 			for key, value := range labels {
 				locale[key] = value
@@ -1337,6 +1479,14 @@ func CheckoutSuccessPath(code string) string {
 
 func LicenseRecoveryPath(code string) string {
 	return strings.TrimRight(Path(code), "/") + "/license-recovery"
+}
+
+func PrivacyPath(code string) string {
+	return strings.TrimRight(Path(code), "/") + "/privacy"
+}
+
+func TermsPath(code string) string {
+	return strings.TrimRight(Path(code), "/") + "/terms"
 }
 
 func T(code, key string) string {

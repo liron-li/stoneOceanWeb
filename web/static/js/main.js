@@ -242,6 +242,90 @@ const localizedText = {
   },
 };
 const text = localizedText[pageLanguageCode] || localizedText.en;
+const recoveryFlowText = {
+  en: {
+    recoveryPending: "Sending verification code...",
+    recoveryCodeSent: "If this email matches a purchase, a verification code will arrive shortly.",
+    recoveryVerifyButton: "Verify code",
+    recoveryVerifyPending: "Verifying code...",
+    recoveryCodeMissing: "Enter the verification code.",
+    recoveryEmpty: "No license keys were found for this verified email.",
+    recoverySuccess: "Verified. License keys found.",
+  },
+  zh: {
+    recoveryPending: "正在发送验证码...",
+    recoveryCodeSent: "如果该邮箱存在购买记录，验证码会很快发送到该邮箱。",
+    recoveryVerifyButton: "验证并查看",
+    recoveryVerifyPending: "正在验证验证码...",
+    recoveryCodeMissing: "请输入验证码。",
+    recoveryEmpty: "这个已验证邮箱下没有找到激活码。",
+    recoverySuccess: "验证成功，已找到以下激活码。",
+  },
+  ja: {
+    recoveryPending: "確認コードを送信しています...",
+    recoveryCodeSent: "購入記録と一致する場合、確認コードがまもなく届きます。",
+    recoveryVerifyButton: "コードを確認",
+    recoveryVerifyPending: "コードを確認しています...",
+    recoveryCodeMissing: "確認コードを入力してください。",
+    recoveryEmpty: "確認済みのメールにライセンスキーは見つかりませんでした。",
+    recoverySuccess: "確認できました。ライセンスキーが見つかりました。",
+  },
+  ko: {
+    recoveryPending: "인증 코드를 보내는 중...",
+    recoveryCodeSent: "구매 기록과 일치하면 인증 코드가 곧 도착합니다.",
+    recoveryVerifyButton: "코드 확인",
+    recoveryVerifyPending: "코드를 확인하는 중...",
+    recoveryCodeMissing: "인증 코드를 입력하세요.",
+    recoveryEmpty: "확인된 이메일에서 라이선스 키를 찾을 수 없습니다.",
+    recoverySuccess: "확인되었습니다. 라이선스 키를 찾았습니다.",
+  },
+  de: {
+    recoveryPending: "Bestaetigungscode wird gesendet...",
+    recoveryCodeSent: "Wenn diese E-Mail zu einem Kauf passt, kommt der Code in Kuerze an.",
+    recoveryVerifyButton: "Code pruefen",
+    recoveryVerifyPending: "Code wird geprueft...",
+    recoveryCodeMissing: "Geben Sie den Bestaetigungscode ein.",
+    recoveryEmpty: "Fuer diese bestaetigte E-Mail wurden keine Lizenzschluessel gefunden.",
+    recoverySuccess: "Bestaetigt. Lizenzschluessel gefunden.",
+  },
+  fr: {
+    recoveryPending: "Envoi du code de verification...",
+    recoveryCodeSent: "Si cet e-mail correspond a un achat, le code arrivera sous peu.",
+    recoveryVerifyButton: "Verifier le code",
+    recoveryVerifyPending: "Verification du code...",
+    recoveryCodeMissing: "Saisissez le code de verification.",
+    recoveryEmpty: "Aucune cle n'a ete trouvee pour cet e-mail verifie.",
+    recoverySuccess: "Verification reussie. Cles trouvees.",
+  },
+  es: {
+    recoveryPending: "Enviando codigo de verificacion...",
+    recoveryCodeSent: "Si este correo coincide con una compra, el codigo llegara pronto.",
+    recoveryVerifyButton: "Verificar codigo",
+    recoveryVerifyPending: "Verificando codigo...",
+    recoveryCodeMissing: "Introduce el codigo de verificacion.",
+    recoveryEmpty: "No se encontraron claves para este correo verificado.",
+    recoverySuccess: "Verificado. Claves encontradas.",
+  },
+  pt: {
+    recoveryPending: "Enviando codigo de verificacao...",
+    recoveryCodeSent: "Se este e-mail corresponder a uma compra, o codigo chegara em breve.",
+    recoveryVerifyButton: "Verificar codigo",
+    recoveryVerifyPending: "Verificando codigo...",
+    recoveryCodeMissing: "Informe o codigo de verificacao.",
+    recoveryEmpty: "Nenhuma chave foi encontrada para este e-mail verificado.",
+    recoverySuccess: "Verificado. Chaves encontradas.",
+  },
+  ru: {
+    recoveryPending: "Отправляем код подтверждения...",
+    recoveryCodeSent: "Если этот e-mail связан с покупкой, код скоро придет.",
+    recoveryVerifyButton: "Проверить код",
+    recoveryVerifyPending: "Проверяем код...",
+    recoveryCodeMissing: "Введите код подтверждения.",
+    recoveryEmpty: "Для этого подтвержденного e-mail ключи не найдены.",
+    recoverySuccess: "Подтверждено. Лицензионные ключи найдены.",
+  },
+};
+Object.assign(text, recoveryFlowText[pageLanguageCode] || recoveryFlowText.en);
 
 const postJSON = async (url, body = {}) => {
   const response = await fetch(url, {
@@ -272,7 +356,8 @@ const setStatusText = (target, type, message) => {
   if (!target) {
     return;
   }
-  target.className = `form-status ${type}`;
+  const roleClasses = ["checkout-status", "recovery-status"].filter((name) => target.classList.contains(name));
+  target.className = ["form-status", ...roleClasses, type].join(" ");
   target.textContent = message;
 };
 
@@ -303,12 +388,32 @@ document.querySelectorAll('input[type="email"]').forEach((input) => {
   });
 });
 
+let recoveryCodeRequested = false;
+const recoveryDefaultButtonText = recoveryButton?.textContent || "";
+const recoveryCodeField = document.querySelector("[data-recovery-code-field]");
+const recoveryCodeInput = document.querySelector('input[name="recovery-code"]');
+
+const resetRecoveryVerification = () => {
+  recoveryCodeRequested = false;
+  if (recoveryCodeField) {
+    recoveryCodeField.hidden = true;
+  }
+  if (recoveryCodeInput) {
+    recoveryCodeInput.value = "";
+    recoveryCodeInput.removeAttribute("aria-invalid");
+  }
+  if (recoveryButton && recoveryDefaultButtonText) {
+    recoveryButton.textContent = recoveryDefaultButtonText;
+  }
+};
+
 const renderLicenses = (target, message, licenses) => {
   if (!target) {
     return;
   }
 
-  target.className = "form-status success";
+  const roleClasses = ["checkout-status", "recovery-status"].filter((name) => target.classList.contains(name));
+  target.className = ["form-status", ...roleClasses, "success"].join(" ");
   target.textContent = "";
 
   const intro = document.createElement("p");
@@ -373,6 +478,7 @@ recoveryButton?.addEventListener("click", async () => {
   const status = document.querySelector(".recovery-status");
   const emailInput = document.querySelector('input[name="recovery-email"]');
   const email = emailInput?.value.trim();
+  const code = recoveryCodeInput?.value.trim();
 
   if (!email) {
     setStatusText(status, "error", text.missingEmail);
@@ -380,11 +486,30 @@ recoveryButton?.addEventListener("click", async () => {
     return;
   }
 
+  if (recoveryCodeRequested && !code) {
+    setStatusText(status, "error", text.recoveryCodeMissing);
+    recoveryCodeInput?.setAttribute("aria-invalid", "true");
+    recoveryCodeInput?.focus();
+    return;
+  }
+
   recoveryButton.disabled = true;
-  setStatusText(status, "pending", text.recoveryPending);
+  setStatusText(status, "pending", recoveryCodeRequested ? text.recoveryVerifyPending : text.recoveryPending);
 
   try {
-    const result = await postJSON("/api/license-recovery", { email });
+    if (!recoveryCodeRequested) {
+      await postJSON("/api/license-recovery/verification-code", { email, locale: pageLanguageCode });
+      recoveryCodeRequested = true;
+      if (recoveryCodeField) {
+        recoveryCodeField.hidden = false;
+      }
+      recoveryButton.textContent = text.recoveryVerifyButton;
+      setStatusText(status, "success", text.recoveryCodeSent);
+      recoveryCodeInput?.focus();
+      return;
+    }
+
+    const result = await postJSON("/api/license-recovery/verification-code/verify", { email, code });
     if (!result.licenses || result.licenses.length === 0) {
       setStatusText(status, "empty", text.recoveryEmpty);
       return;
@@ -395,6 +520,19 @@ recoveryButton?.addEventListener("click", async () => {
   } finally {
     recoveryButton.disabled = false;
   }
+});
+
+document.querySelector('input[name="recovery-email"]')?.addEventListener("input", () => {
+  resetRecoveryVerification();
+  const status = document.querySelector(".recovery-status");
+  if (status) {
+    status.textContent = "";
+    status.className = "form-status recovery-status";
+  }
+});
+
+recoveryCodeInput?.addEventListener("input", () => {
+  recoveryCodeInput.removeAttribute("aria-invalid");
 });
 
 const copyText = async (value) => {

@@ -265,8 +265,9 @@
   <footer class="site-footer">
     <span>{{ call .T "footer.copyright" }}</span>
     <nav aria-label="{{ call .T "footer.aria" }}">
-      <a href="#">{{ call .T "footer.privacy" }}</a>
-      <a href="#">{{ call .T "footer.terms" }}</a>
+      <a href="{{ .PrivacyPath }}">{{ call .T "footer.privacy" }}</a>
+      <a href="{{ .TermsPath }}">{{ call .T "footer.terms" }}</a>
+      <a href="{{ .LicenseRecoveryPath }}">{{ call .T "footer.licenseRecovery" }}</a>
       <a href="mailto:support@recoverease.com">{{ call .T "footer.contact" }}</a>
     </nav>
   </footer>

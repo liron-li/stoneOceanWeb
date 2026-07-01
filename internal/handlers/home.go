@@ -94,6 +94,14 @@ func Sitemap(c *gin.Context) {
 			Loc:     strings.TrimRight(baseURL, "/") + i18n.LicenseRecoveryPath(lang.Code),
 			LastMod: now,
 		})
+		urls = append(urls, sitemapURL{
+			Loc:     strings.TrimRight(baseURL, "/") + i18n.PrivacyPath(lang.Code),
+			LastMod: now,
+		})
+		urls = append(urls, sitemapURL{
+			Loc:     strings.TrimRight(baseURL, "/") + i18n.TermsPath(lang.Code),
+			LastMod: now,
+		})
 	}
 
 	c.XML(http.StatusOK, sitemap{
@@ -108,16 +116,19 @@ func renderHome(c *gin.Context, locale string) {
 	path := i18n.Path(locale)
 
 	c.HTML(http.StatusOK, "index.tmpl", gin.H{
-		"Title":        i18n.T(locale, "meta.title"),
-		"Description":  i18n.T(locale, "meta.description"),
-		"Locale":       locale,
-		"HTMLLang":     i18n.HTMLLang(locale),
-		"Canonical":    strings.TrimRight(baseURL, "/") + path,
-		"DefaultURL":   strings.TrimRight(baseURL, "/") + "/",
-		"Alternates":   i18n.Alternates(baseURL),
-		"Languages":    i18n.Languages(locale),
-		"HomePath":     path,
-		"CheckoutPath": i18n.CheckoutPath(locale),
+		"Title":               i18n.T(locale, "meta.title"),
+		"Description":         i18n.T(locale, "meta.description"),
+		"Locale":              locale,
+		"HTMLLang":            i18n.HTMLLang(locale),
+		"Canonical":           strings.TrimRight(baseURL, "/") + path,
+		"DefaultURL":          strings.TrimRight(baseURL, "/") + "/",
+		"Alternates":          i18n.Alternates(baseURL),
+		"Languages":           i18n.Languages(locale),
+		"HomePath":            path,
+		"CheckoutPath":        i18n.CheckoutPath(locale),
+		"LicenseRecoveryPath": i18n.LicenseRecoveryPath(locale),
+		"PrivacyPath":         i18n.PrivacyPath(locale),
+		"TermsPath":           i18n.TermsPath(locale),
 		"T": func(key string) string {
 			return i18n.T(locale, key)
 		},

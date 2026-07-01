@@ -81,3 +81,30 @@ func TestBuildLicenseMessageUsesOrderLocale(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildRecoveryCodeMessageUsesLocale(t *testing.T) {
+	mailer := NewSMTPMailer(config.EmailConfig{
+		FromName:    "RecoverEase",
+		FromAddress: "mailer@example.com",
+	})
+	expiresAt := time.Date(2026, 7, 1, 15, 0, 0, 0, time.UTC)
+
+	message, err := mailer.buildRecoveryCodeMessage("buyer@example.com", "123456", "zh", expiresAt)
+	if err != nil {
+		t.Fatalf("buildRecoveryCodeMessage() error = %v", err)
+	}
+
+	body := string(message)
+	for _, want := range []string{
+		`Content-Type: multipart/alternative`,
+		`Content-Type: text/plain; charset="UTF-8"`,
+		`Content-Type: text/html; charset="UTF-8"`,
+		"123456",
+		"验证您的购买邮箱",
+		"验证码",
+	} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("message does not contain %q", want)
+		}
+	}
+}

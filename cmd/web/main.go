@@ -41,10 +41,12 @@ func main() {
 
 	eventBus := events.NewBus(log.Default())
 	if cfg.Email.Enabled {
-		eventBus.AddPaymentPaidListener(events.NewLicenseEmailListener(mailer.NewSMTPMailer(cfg.Email)))
-		log.Printf("license email listener enabled for %s:%s", cfg.Email.Host, cfg.Email.Port)
+		smtpMailer := mailer.NewSMTPMailer(cfg.Email)
+		eventBus.AddPaymentPaidListener(events.NewLicenseEmailListener(smtpMailer))
+		eventBus.AddLicenseRecoveryCodeListener(events.NewLicenseRecoveryCodeEmailListener(smtpMailer))
+		log.Printf("license email listeners enabled for %s:%s", cfg.Email.Host, cfg.Email.Port)
 	} else {
-		log.Printf("license email listener disabled; set EMAIL_* SMTP variables to enable delivery")
+		log.Printf("license email listeners disabled; set EMAIL_* SMTP variables to enable delivery")
 	}
 
 	r := router.NewWithEvents(appStore, eventBus)
