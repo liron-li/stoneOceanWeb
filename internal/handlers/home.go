@@ -21,6 +21,11 @@ func Checkout(c *gin.Context) {
 	c.Redirect(http.StatusFound, i18n.CheckoutPath(locale))
 }
 
+func CheckoutSuccess(c *gin.Context) {
+	locale := i18n.MatchAcceptLanguage(c.GetHeader("Accept-Language"))
+	redirectWithQuery(c, http.StatusFound, i18n.CheckoutSuccessPath(locale))
+}
+
 func LicenseRecovery(c *gin.Context) {
 	locale := i18n.MatchAcceptLanguage(c.GetHeader("Accept-Language"))
 	c.Redirect(http.StatusFound, i18n.LicenseRecoveryPath(locale))
@@ -44,6 +49,16 @@ func LocalizedCheckout(c *gin.Context) {
 	}
 
 	renderCheckout(c, locale)
+}
+
+func LocalizedCheckoutSuccess(c *gin.Context) {
+	locale := c.Param("locale")
+	if !i18n.Supported(locale) {
+		redirectWithQuery(c, http.StatusMovedPermanently, i18n.CheckoutSuccessPath(i18n.DefaultLocale))
+		return
+	}
+
+	renderCheckoutSuccess(c, locale)
 }
 
 func LocalizedLicenseRecovery(c *gin.Context) {
@@ -124,11 +139,48 @@ func renderCheckout(c *gin.Context, locale string) {
 		"Languages":           i18n.LanguagesForPath(locale, "/checkout"),
 		"HomePath":            i18n.Path(locale),
 		"CheckoutPath":        path,
+		"CheckoutSuccessPath": i18n.CheckoutSuccessPath(locale),
 		"LicenseRecoveryPath": i18n.LicenseRecoveryPath(locale),
 		"T": func(key string) string {
 			return i18n.T(locale, key)
 		},
 	})
+}
+
+func renderCheckoutSuccess(c *gin.Context, locale string) {
+	baseURL := requestBaseURL(c)
+	path := i18n.CheckoutSuccessPath(locale)
+	languages := i18n.LanguagesForPath(locale, "/checkout/success")
+	if rawQuery := c.Request.URL.RawQuery; rawQuery != "" {
+		for index := range languages {
+			languages[index].Path += "?" + rawQuery
+		}
+	}
+
+	c.HTML(http.StatusOK, "checkout_success.tmpl", gin.H{
+		"Title":               i18n.T(locale, "checkout.success.meta.title"),
+		"Description":         i18n.T(locale, "checkout.success.meta.description"),
+		"Locale":              locale,
+		"HTMLLang":            i18n.HTMLLang(locale),
+		"Canonical":           strings.TrimRight(baseURL, "/") + path,
+		"DefaultURL":          strings.TrimRight(baseURL, "/") + "/checkout/success",
+		"Alternates":          i18n.AlternatesForPath(baseURL, "/checkout/success"),
+		"Languages":           languages,
+		"HomePath":            i18n.Path(locale),
+		"CheckoutPath":        i18n.CheckoutPath(locale),
+		"CheckoutSuccessPath": path,
+		"LicenseRecoveryPath": i18n.LicenseRecoveryPath(locale),
+		"T": func(key string) string {
+			return i18n.T(locale, key)
+		},
+	})
+}
+
+func redirectWithQuery(c *gin.Context, code int, path string) {
+	if rawQuery := c.Request.URL.RawQuery; rawQuery != "" {
+		path += "?" + rawQuery
+	}
+	c.Redirect(code, path)
 }
 
 func renderLicenseRecovery(c *gin.Context, locale string) {

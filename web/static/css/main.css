@@ -1416,6 +1416,137 @@ body[data-theme="dark"] .timeline li > span {
   top: 88px;
 }
 
+.checkout-success-page {
+  width: min(960px, calc(100% - 40px));
+}
+
+.checkout-success-hero {
+  max-width: 720px;
+}
+
+.checkout-success-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 360px);
+  gap: 22px;
+  align-items: start;
+}
+
+.license-delivery-card {
+  display: grid;
+  gap: 22px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, var(--surface-tint), var(--surface));
+  box-shadow: var(--shadow-soft);
+}
+
+.license-delivery-heading {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 14px;
+  align-items: start;
+}
+
+.license-delivery-heading h2 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.payment-result-status {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.payment-result-status.error {
+  color: #9f2532;
+}
+
+.license-key-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.license-key-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 22px;
+  border: 1px solid rgba(21, 109, 255, 0.48);
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(234, 243, 255, 0.92), rgba(255, 255, 255, 0.92));
+  box-shadow: 0 18px 42px rgba(21, 109, 255, 0.14);
+}
+
+.license-key-row strong {
+  color: #071b4f;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 21px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.license-copy-button {
+  min-height: 44px;
+  padding: 0 18px;
+  color: #ffffff;
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--blue), #4999ff);
+  box-shadow: 0 14px 28px rgba(21, 109, 255, 0.22);
+}
+
+body[data-theme="dark"] .license-key-row {
+  border-color: rgba(106, 168, 255, 0.46);
+  background:
+    linear-gradient(180deg, rgba(17, 35, 62, 0.94), rgba(15, 23, 36, 0.94));
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.32);
+}
+
+body[data-theme="dark"] .license-key-row strong {
+  color: var(--ink);
+}
+
+.license-detail-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+
+.license-detail-list div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.license-detail-list div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.license-detail-list dt {
+  color: var(--muted);
+}
+
+.license-detail-list dd {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 760;
+  text-align: right;
+}
+
+.success-assurance {
+  position: sticky;
+  top: 88px;
+}
+
 .checkout-assurance {
   display: grid;
   padding: 20px;
@@ -1493,12 +1624,14 @@ body[data-theme="dark"] .timeline li > span {
   }
 
   .checkout-layout,
-  .recovery-layout {
+  .recovery-layout,
+  .checkout-success-layout {
     grid-template-columns: 1fr;
   }
 
   .order-summary,
-  .recovery-assurance {
+  .recovery-assurance,
+  .success-assurance {
     position: static;
   }
 }
@@ -1791,7 +1924,8 @@ body[data-theme="dark"] .timeline li > span {
 
   .checkout-card,
   .summary-card,
-  .license-recovery-card {
+  .license-recovery-card,
+  .license-delivery-card {
     padding: 22px;
   }
 
@@ -1811,6 +1945,19 @@ body[data-theme="dark"] .timeline li > span {
 
   .checkout-assurance {
     padding: 18px;
+  }
+
+  .license-key-row {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .license-key-row strong {
+    font-size: 18px;
+  }
+
+  .license-copy-button {
+    width: 100%;
   }
 }
 

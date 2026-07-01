@@ -130,7 +130,7 @@
               <dd data-license-price>$29.00</dd>
             </div>
           </dl>
-          <button class="button button-primary checkout-submit" type="button">{{ call .T "checkout.pay" }}</button>
+          <button class="button button-primary checkout-submit" type="button" data-success-path="{{ .CheckoutSuccessPath }}">{{ call .T "checkout.pay" }}</button>
           <div class="form-status checkout-status" role="status" aria-live="polite"></div>
           <p class="checkout-note">{{ call .T "checkout.terms" }}</p>
         </div>

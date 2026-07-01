@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="{{ .HTMLLang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="{{ .Description }}">
+  <title>{{ .Title }}</title>
+  <link rel="canonical" href="{{ .Canonical }}">
+  {{ range .Alternates }}
+  <link rel="alternate" hreflang="{{ .HrefLang }}" href="{{ .Path }}">
+  {{ end }}
+  <link rel="alternate" hreflang="x-default" href="{{ .DefaultURL }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400..900&amp;family=Noto+Sans+SC:wght@400..900&amp;display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/main.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="brand" href="{{ .HomePath }}" aria-label="{{ call .T "brand.aria" }}">
+        <span class="brand-mark">R</span>
+        <span>RecoverEase</span>
+      </a>
+      <nav class="nav-links checkout-nav" aria-label="{{ call .T "nav.aria" }}">
+        <a href="{{ .CheckoutPath }}">{{ call .T "checkout.success.backCheckout" }}</a>
+        <a href="{{ .LicenseRecoveryPath }}">{{ call .T "checkout.success.recovery" }}</a>
+      </nav>
+      <div class="header-actions">
+        <details class="locale-menu">
+          <summary aria-label="{{ call .T "controls.language" }}">
+            <span class="locale-label">{{ call .T "controls.language" }}</span>
+            <strong>
+              {{ range .Languages }}{{ if .Active }}{{ .Name }}{{ end }}{{ end }}
+            </strong>
+            <span class="locale-chevron" aria-hidden="true"></span>
+          </summary>
+          <div class="locale-list" role="listbox">
+            {{ range .Languages }}
+            <a class="locale-option{{ if .Active }} active{{ end }}" href="{{ .Path }}" hreflang="{{ .HrefLang }}" lang="{{ .HTMLLang }}" role="option" aria-selected="{{ .Active }}">{{ .Name }}</a>
+            {{ end }}
+          </div>
+        </details>
+        <button class="theme-toggle" type="button" aria-label="{{ call .T "controls.theme" }}" title="{{ call .T "controls.theme" }}">
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="checkout-page checkout-success-page">
+    <section class="checkout-hero checkout-success-hero">
+      <p class="eyebrow">{{ call .T "checkout.success.eyebrow" }}</p>
+      <h1>{{ call .T "checkout.success.title" }}</h1>
+      <p>{{ call .T "checkout.success.subtitle" }}</p>
+    </section>
+
+    <section
+      class="checkout-success-layout"
+      aria-label="{{ call .T "checkout.success.aria" }}"
+      data-payment-result
+      data-loading="{{ call .T "checkout.success.loading" }}"
+      data-missing="{{ call .T "checkout.success.missing" }}"
+      data-pending="{{ call .T "checkout.success.pending" }}"
+      data-failed="{{ call .T "checkout.success.failed" }}"
+      data-copy="{{ call .T "checkout.success.copy" }}"
+      data-copied="{{ call .T "checkout.success.copied" }}"
+      data-order="{{ call .T "checkout.success.order" }}"
+      data-plan="{{ call .T "checkout.success.plan" }}"
+      data-issued-at="{{ call .T "checkout.success.issuedAt" }}"
+      data-expires-at="{{ call .T "checkout.success.expiresAt" }}"
+      data-lifetime="{{ call .T "checkout.success.lifetime" }}"
+    >
+      <article class="license-delivery-card">
+        <div class="license-delivery-heading">
+          <span class="checkout-step">OK</span>
+          <div>
+            <h2>{{ call .T "checkout.success.card.title" }}</h2>
+            <p data-payment-status>{{ call .T "checkout.success.loading" }}</p>
+          </div>
+        </div>
+        <div class="license-key-panel" data-license-panel hidden></div>
+      </article>
+
+      <div class="checkout-assurance success-assurance">
+        <article>
+          <strong>{{ call .T "checkout.assurance.delivery.title" }}</strong>
+          <span>{{ call .T "checkout.assurance.delivery.desc" }}</span>
+        </article>
+        <article>
+          <strong>{{ call .T "checkout.assurance.secure.title" }}</strong>
+          <span>{{ call .T "checkout.assurance.secure.desc" }}</span>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

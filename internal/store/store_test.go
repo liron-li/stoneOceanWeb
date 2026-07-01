@@ -94,10 +94,55 @@ func TestMonthlyLicenseExpiresAfterDuration(t *testing.T) {
 	}
 }
 
+func TestFindPaymentResultReturnsLicenseAfterPayment(t *testing.T) {
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	result, err := store.CreateCheckoutOrder(ctx, CreateCheckoutOrderInput{
+		Email:         "result@example.com",
+		PlanCode:      DefaultLifetimePlanCode,
+		PaymentMethod: PaymentMethodUSDT,
+	})
+	if err != nil {
+		t.Fatalf("CreateCheckoutOrder() error = %v", err)
+	}
+
+	pending, err := store.FindPaymentResult(ctx, result.Payment.PaymentNo)
+	if err != nil {
+		t.Fatalf("pending FindPaymentResult() error = %v", err)
+	}
+	if pending.Payment.Status != PaymentStatusPending {
+		t.Fatalf("pending Payment.Status = %q, want %q", pending.Payment.Status, PaymentStatusPending)
+	}
+	if pending.License != nil {
+		t.Fatal("pending result has a license, want nil")
+	}
+
+	paidAt := time.Date(2026, 6, 26, 12, 0, 0, 0, time.UTC)
+	license, err := store.MarkPaymentPaid(ctx, result.Payment.PaymentNo, "provider-ref-result", paidAt)
+	if err != nil {
+		t.Fatalf("MarkPaymentPaid() error = %v", err)
+	}
+
+	paid, err := store.FindPaymentResult(ctx, result.Payment.PaymentNo)
+	if err != nil {
+		t.Fatalf("paid FindPaymentResult() error = %v", err)
+	}
+	if paid.Payment.Status != PaymentStatusPaid {
+		t.Fatalf("paid Payment.Status = %q, want %q", paid.Payment.Status, PaymentStatusPaid)
+	}
+	if paid.License == nil {
+		t.Fatal("paid result License is nil")
+	}
+	if paid.License.LicenseKey != license.LicenseKey {
+		t.Fatalf("LicenseKey = %q, want %q", paid.License.LicenseKey, license.LicenseKey)
+	}
+}
+
 func TestRecoveryTokenLifecycle(t *testing.T) {
 	store := newTestStore(t)
 	ctx := context.Background()
-	now := time.Date(2026, 6, 26, 12, 0, 0, 0, time.UTC)
+	now := time.Now()
 
 	token, err := store.CreateRecoveryToken(ctx, "Buyer@Example.com", "hash-1", now.Add(time.Hour))
 	if err != nil {

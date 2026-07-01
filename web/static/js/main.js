@@ -39,14 +39,28 @@ document.querySelectorAll('a[href^="#"]').forEach((link) => {
   });
 });
 
+const buildLocaleHref = (href) => {
+  const target = new URL(href, window.location.origin);
+  if (document.querySelector("[data-payment-result]")) {
+    new URLSearchParams(window.location.search).forEach((value, key) => {
+      if (!target.searchParams.has(key)) {
+        target.searchParams.append(key, value);
+      }
+    });
+  }
+  target.hash = window.location.hash;
+  return `${target.pathname}${target.search}${target.hash}`;
+};
+
 document.querySelectorAll(".locale-option").forEach((option) => {
   option.addEventListener("click", (event) => {
-    if (!window.location.hash) {
+    const shouldPreservePaymentQuery = document.querySelector("[data-payment-result]") && window.location.search;
+    if (!window.location.hash && !shouldPreservePaymentQuery) {
       return;
     }
 
     event.preventDefault();
-    window.location.href = `${option.getAttribute("href")}${window.location.hash}`;
+    window.location.href = buildLocaleHref(option.getAttribute("href"));
   });
 });
 
@@ -75,6 +89,7 @@ document.querySelectorAll('input[name="license"]').forEach((option) => {
 });
 
 const isChinesePage = document.documentElement.lang.toLowerCase().startsWith("zh");
+const pageLocale = document.documentElement.lang || navigator.language || "en";
 const checkoutButton = document.querySelector(".checkout-submit");
 const recoveryButton = document.querySelector(".license-recovery-submit");
 
@@ -108,6 +123,15 @@ const postJSON = async (url, body = {}) => {
   return data;
 };
 
+const getJSON = async (url) => {
+  const response = await fetch(url);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || text.requestFailed);
+  }
+  return data;
+};
+
 const setStatusText = (target, type, message) => {
   if (!target) {
     return;
@@ -115,6 +139,17 @@ const setStatusText = (target, type, message) => {
   target.className = `form-status ${type}`;
   target.textContent = message;
 };
+
+const formatLocalizedDate = (value, options) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return value || "";
+  }
+  return new Intl.DateTimeFormat(pageLocale, options).format(date);
+};
+
+const formatDate = (value) => formatLocalizedDate(value, { dateStyle: "medium" });
+const formatDateTime = (value) => formatLocalizedDate(value, { dateStyle: "medium", timeStyle: "short" });
 
 const focusInvalidEmail = (input) => {
   if (!input) {
@@ -159,7 +194,7 @@ const renderLicenses = (target, message, licenses) => {
 
     const expiry = document.createElement("span");
     expiry.textContent = license.expiresAt
-      ? `${text.expiresAt}: ${new Date(license.expiresAt).toLocaleDateString()}`
+      ? `${text.expiresAt}: ${formatDate(license.expiresAt)}`
       : text.lifetime;
 
     item.append(key, order, expiry);
@@ -187,8 +222,10 @@ checkoutButton?.addEventListener("click", async () => {
 
   try {
     const checkout = await postJSON("/api/checkout", { email, license, paymentMethod });
-    const payment = await postJSON(checkout.paymentUrl);
-    renderLicenses(status, text.checkoutSuccess, [payment.license]);
+    await postJSON(checkout.paymentUrl);
+
+    const successPath = checkoutButton.dataset.successPath || "/checkout/success";
+    window.location.href = `${successPath}?paymentNo=${encodeURIComponent(checkout.paymentNo)}`;
   } catch (error) {
     setStatusText(status, "error", error.message || text.requestFailed);
   } finally {
@@ -223,5 +260,108 @@ recoveryButton?.addEventListener("click", async () => {
     recoveryButton.disabled = false;
   }
 });
+
+const copyText = async (value) => {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const input = document.createElement("textarea");
+  input.value = value;
+  input.setAttribute("readonly", "");
+  input.style.position = "fixed";
+  input.style.opacity = "0";
+  document.body.append(input);
+  input.select();
+  document.execCommand("copy");
+  input.remove();
+};
+
+const renderPaymentResult = async () => {
+  const root = document.querySelector("[data-payment-result]");
+  if (!root) {
+    return;
+  }
+
+  const status = root.querySelector("[data-payment-status]");
+  const panel = root.querySelector("[data-license-panel]");
+  const params = new URLSearchParams(window.location.search);
+  const paymentNo = params.get("paymentNo");
+
+  if (!paymentNo) {
+    status.textContent = root.dataset.missing;
+    status.className = "payment-result-status error";
+    return;
+  }
+
+  status.textContent = root.dataset.loading;
+  status.className = "payment-result-status pending";
+
+  try {
+    const result = await getJSON(`/api/payments/${encodeURIComponent(paymentNo)}/result`);
+    if (!result.license) {
+      status.textContent = root.dataset.pending;
+      status.className = "payment-result-status pending";
+      return;
+    }
+
+    const license = result.license;
+    status.textContent = "";
+    status.className = "payment-result-status success";
+    panel.hidden = false;
+    panel.textContent = "";
+
+    const keyRow = document.createElement("div");
+    keyRow.className = "license-key-row";
+
+    const key = document.createElement("strong");
+    key.textContent = license.licenseKey;
+
+    const copyButton = document.createElement("button");
+    copyButton.className = "button button-secondary license-copy-button";
+    copyButton.type = "button";
+    copyButton.textContent = root.dataset.copy;
+    copyButton.addEventListener("click", async () => {
+      await copyText(license.licenseKey);
+      copyButton.textContent = root.dataset.copied;
+      window.setTimeout(() => {
+        copyButton.textContent = root.dataset.copy;
+      }, 1800);
+    });
+
+    keyRow.append(key, copyButton);
+
+    const detailList = document.createElement("dl");
+    detailList.className = "license-detail-list";
+
+    const details = [
+      [root.dataset.order, license.orderNo || result.orderNo],
+      [root.dataset.plan, license.plan],
+      [root.dataset.issuedAt, formatDateTime(license.issuedAt)],
+      [
+        root.dataset.expiresAt,
+        license.expiresAt ? formatDate(license.expiresAt) : root.dataset.lifetime,
+      ],
+    ];
+
+    details.forEach(([label, value]) => {
+      const row = document.createElement("div");
+      const term = document.createElement("dt");
+      const desc = document.createElement("dd");
+      term.textContent = label;
+      desc.textContent = value;
+      row.append(term, desc);
+      detailList.append(row);
+    });
+
+    panel.append(keyRow, detailList);
+  } catch (error) {
+    status.textContent = error.message || root.dataset.failed;
+    status.className = "payment-result-status error";
+  }
+};
+
+renderPaymentResult();
 
 applyTheme(getPreferredTheme());

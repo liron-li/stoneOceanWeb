@@ -42,6 +42,12 @@ type CreateCheckoutOrderResult struct {
 	Payment  Payment
 }
 
+type PaymentResult struct {
+	Payment Payment
+	Order   Order
+	License *License
+}
+
 func New(db *gorm.DB) *Store {
 	return &Store{db: db}
 }
@@ -308,6 +314,50 @@ func (s *Store) MarkPaymentPaid(ctx context.Context, paymentNo string, providerR
 	}
 
 	return &license, nil
+}
+
+func (s *Store) FindPaymentResult(ctx context.Context, paymentNo string) (*PaymentResult, error) {
+	if strings.TrimSpace(paymentNo) == "" {
+		return nil, fmt.Errorf("%w: payment number is required", ErrInvalidInput)
+	}
+
+	var payment Payment
+	err := s.db.WithContext(ctx).
+		Preload("Order.Customer").
+		Preload("Order.LicensePlan").
+		Where("payment_no = ?", strings.TrimSpace(paymentNo)).
+		First(&payment).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	result := &PaymentResult{
+		Payment: payment,
+		Order:   payment.Order,
+	}
+	if payment.Status != PaymentStatusPaid {
+		return result, nil
+	}
+
+	var license License
+	err = s.db.WithContext(ctx).
+		Preload("Customer").
+		Preload("Order").
+		Preload("LicensePlan").
+		Where("order_id = ?", payment.OrderID).
+		First(&license).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return result, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	result.License = &license
+	return result, nil
 }
 
 func (s *Store) FindLicensesByEmail(ctx context.Context, email string) ([]License, error) {

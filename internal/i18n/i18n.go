@@ -361,7 +361,27 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.summary.license":          "Lifetime license, 1 user",
 		"checkout.summary.total":            "Amount due",
 		"checkout.pay":                      "Pay now",
-		"checkout.terms":                    "You will be redirected to the payment provider to complete payment. After confirmation, the license key is sent to your email.",
+		"checkout.terms":                    "You will be redirected to the payment provider to complete payment. After confirmation, your license key appears on the payment result page.",
+		"checkout.success.meta.title":       "RecoverEase Payment Result",
+		"checkout.success.meta.description": "View your RecoverEase payment result and license key.",
+		"checkout.success.eyebrow":          "Payment Result",
+		"checkout.success.title":            "Your license key is ready",
+		"checkout.success.subtitle":         "Keep this page open until you copy your license key. You can also recover it later with your purchase email.",
+		"checkout.success.aria":             "RecoverEase payment result",
+		"checkout.success.card.title":       "License key",
+		"checkout.success.loading":          "Checking payment result...",
+		"checkout.success.missing":          "Payment number is missing. Please return to checkout and try again.",
+		"checkout.success.pending":          "Payment is not confirmed yet. Please refresh this page after the payment provider confirms it.",
+		"checkout.success.failed":           "Unable to load payment result. Please try again later.",
+		"checkout.success.copy":             "Copy",
+		"checkout.success.copied":           "Copied",
+		"checkout.success.order":            "Order",
+		"checkout.success.plan":             "Plan",
+		"checkout.success.issuedAt":         "Issued",
+		"checkout.success.expiresAt":        "Expires",
+		"checkout.success.lifetime":         "Lifetime",
+		"checkout.success.backCheckout":     "Back to checkout",
+		"checkout.success.recovery":         "Recover license key",
 		"checkout.recovery.title":           "Already purchased?",
 		"checkout.recovery.desc":            "Enter the purchase email to receive a secure link for your license key and purchase record.",
 		"checkout.recovery.email":           "Purchase email",
@@ -428,7 +448,27 @@ var checkoutContent = map[string]map[string]string{
 		"checkout.summary.license":          "永久授权，1 位用户",
 		"checkout.summary.total":            "应付金额",
 		"checkout.pay":                      "立即支付",
-		"checkout.terms":                    "您将跳转到支付服务商页面完成付款。支付确认后，激活码会发送到您的邮箱。",
+		"checkout.terms":                    "您将跳转到支付服务商页面完成付款。支付确认后，激活码会显示在支付结果页。",
+		"checkout.success.meta.title":       "RecoverEase 支付结果",
+		"checkout.success.meta.description": "查看 RecoverEase 支付结果和激活码。",
+		"checkout.success.eyebrow":          "支付结果",
+		"checkout.success.title":            "您的激活码已生成",
+		"checkout.success.subtitle":         "请在复制激活码前保留此页面。之后也可以用购买邮箱找回激活码。",
+		"checkout.success.aria":             "RecoverEase 支付结果",
+		"checkout.success.card.title":       "激活码",
+		"checkout.success.loading":          "正在查询支付结果...",
+		"checkout.success.missing":          "缺少支付单号，请返回结算页重新尝试。",
+		"checkout.success.pending":          "支付尚未确认。请在支付服务商确认后刷新此页面。",
+		"checkout.success.failed":           "暂时无法加载支付结果，请稍后重试。",
+		"checkout.success.copy":             "复制",
+		"checkout.success.copied":           "已复制",
+		"checkout.success.order":            "订单号",
+		"checkout.success.plan":             "授权方案",
+		"checkout.success.issuedAt":         "发放时间",
+		"checkout.success.expiresAt":        "有效期至",
+		"checkout.success.lifetime":         "永久有效",
+		"checkout.success.backCheckout":     "返回结算页",
+		"checkout.success.recovery":         "找回激活码",
 		"checkout.recovery.title":           "已经购买？",
 		"checkout.recovery.desc":            "输入购买时使用的邮箱，接收安全链接以找回激活码和购买记录。",
 		"checkout.recovery.email":           "购买邮箱",
@@ -1072,6 +1112,10 @@ func Path(code string) string {
 
 func CheckoutPath(code string) string {
 	return strings.TrimRight(Path(code), "/") + "/checkout"
+}
+
+func CheckoutSuccessPath(code string) string {
+	return strings.TrimRight(CheckoutPath(code), "/") + "/success"
 }
 
 func LicenseRecoveryPath(code string) string {
