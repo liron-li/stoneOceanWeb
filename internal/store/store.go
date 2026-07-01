@@ -19,11 +19,14 @@ const (
 )
 
 var (
-	ErrInvalidInput  = errors.New("invalid input")
-	ErrNotFound      = errors.New("not found")
-	ErrTokenExpired  = errors.New("recovery token expired")
-	ErrTokenUsed     = errors.New("recovery token already used")
-	ErrPaymentMethod = errors.New("unsupported payment method")
+	ErrInvalidInput    = errors.New("invalid input")
+	ErrNotFound        = errors.New("not found")
+	ErrTokenExpired    = errors.New("recovery token expired")
+	ErrTokenUsed       = errors.New("recovery token already used")
+	ErrPaymentMethod   = errors.New("unsupported payment method")
+	ErrLicenseInactive = errors.New("license is not active")
+	ErrLicenseExpired  = errors.New("license expired")
+	ErrActivationLimit = errors.New("activation limit reached")
 )
 
 type Store struct {
@@ -49,6 +52,28 @@ type PaymentResult struct {
 	License *License
 }
 
+type LicenseActivationInput struct {
+	LicenseKey          string
+	DeviceIDHash        string
+	DeviceName          string
+	Platform            string
+	AppVersion          string
+	ActivationTokenHash string
+	Now                 time.Time
+}
+
+type LicenseValidationInput struct {
+	ActivationTokenHash string
+	DeviceIDHash        string
+	AppVersion          string
+	Now                 time.Time
+}
+
+type LicenseActivationResult struct {
+	License    License
+	Activation LicenseActivation
+}
+
 func New(db *gorm.DB) *Store {
 	return &Store{db: db}
 }
@@ -65,6 +90,7 @@ func AutoMigrate(db *gorm.DB) error {
 		&Payment{},
 		&License{},
 		&RecoveryToken{},
+		&LicenseActivation{},
 	)
 }
 
@@ -72,21 +98,23 @@ func SeedDefaultPlans(ctx context.Context, db *gorm.DB) error {
 	monthlyDays := 30
 	plans := []LicensePlan{
 		{
-			Code:         DefaultMonthlyPlanCode,
-			Name:         "RecoverEase Pro Monthly",
-			Kind:         LicenseKindMonthly,
-			DurationDays: &monthlyDays,
-			PriceCents:   900,
-			Currency:     "USD",
-			IsActive:     true,
+			Code:           DefaultMonthlyPlanCode,
+			Name:           "RecoverEase Pro Monthly",
+			Kind:           LicenseKindMonthly,
+			DurationDays:   &monthlyDays,
+			PriceCents:     900,
+			Currency:       "USD",
+			MaxActivations: 2,
+			IsActive:       true,
 		},
 		{
-			Code:       DefaultLifetimePlanCode,
-			Name:       "RecoverEase Pro Lifetime",
-			Kind:       LicenseKindLifetime,
-			PriceCents: 2900,
-			Currency:   "USD",
-			IsActive:   true,
+			Code:           DefaultLifetimePlanCode,
+			Name:           "RecoverEase Pro Lifetime",
+			Kind:           LicenseKindLifetime,
+			PriceCents:     2900,
+			Currency:       "USD",
+			MaxActivations: 2,
+			IsActive:       true,
 		},
 	}
 
@@ -400,6 +428,228 @@ func (s *Store) FindLicensesByEmail(ctx context.Context, email string) ([]Licens
 	}
 
 	return licenses, nil
+}
+
+func (s *Store) ActivateLicense(ctx context.Context, input LicenseActivationInput) (*LicenseActivationResult, error) {
+	input.LicenseKey = strings.TrimSpace(input.LicenseKey)
+	input.DeviceIDHash = strings.TrimSpace(input.DeviceIDHash)
+	input.ActivationTokenHash = strings.TrimSpace(input.ActivationTokenHash)
+	if input.LicenseKey == "" || input.DeviceIDHash == "" || input.ActivationTokenHash == "" {
+		return nil, fmt.Errorf("%w: license key, device id, and token are required", ErrInvalidInput)
+	}
+	if input.Now.IsZero() {
+		input.Now = time.Now()
+	}
+
+	var result LicenseActivationResult
+	err := s.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var license License
+		err := tx.
+			Preload("Customer").
+			Preload("Order").
+			Preload("LicensePlan").
+			Where("license_key = ?", input.LicenseKey).
+			First(&license).Error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return ErrNotFound
+		}
+		if err != nil {
+			return err
+		}
+		if err := ensureLicenseUsable(license, input.Now); err != nil {
+			return err
+		}
+
+		var activation LicenseActivation
+		err = tx.
+			Where("license_id = ? AND device_id_hash = ?", license.ID, input.DeviceIDHash).
+			First(&activation).Error
+		if err == nil {
+			if activation.Status != ActivationStatusActive {
+				if err := ensureActivationCapacity(tx, license, 0); err != nil {
+					return err
+				}
+			}
+			updates := map[string]any{
+				"device_name":           strings.TrimSpace(input.DeviceName),
+				"platform":              strings.TrimSpace(input.Platform),
+				"app_version":           strings.TrimSpace(input.AppVersion),
+				"status":                ActivationStatusActive,
+				"activation_token_hash": input.ActivationTokenHash,
+				"last_seen_at":          input.Now,
+				"deactivated_at":        nil,
+			}
+			if activation.ActivatedAt.IsZero() {
+				updates["activated_at"] = input.Now
+			}
+			if err := tx.Model(&activation).Updates(updates).Error; err != nil {
+				return err
+			}
+			if err := tx.First(&activation, activation.ID).Error; err != nil {
+				return err
+			}
+			result = LicenseActivationResult{License: license, Activation: activation}
+			return nil
+		}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+
+		if err := ensureActivationCapacity(tx, license, 0); err != nil {
+			return err
+		}
+
+		activation = LicenseActivation{
+			LicenseID:           license.ID,
+			DeviceIDHash:        input.DeviceIDHash,
+			DeviceName:          strings.TrimSpace(input.DeviceName),
+			Platform:            strings.TrimSpace(input.Platform),
+			AppVersion:          strings.TrimSpace(input.AppVersion),
+			Status:              ActivationStatusActive,
+			ActivationTokenHash: input.ActivationTokenHash,
+			ActivatedAt:         input.Now,
+			LastSeenAt:          input.Now,
+		}
+		if err := tx.Create(&activation).Error; err != nil {
+			return err
+		}
+
+		result = LicenseActivationResult{License: license, Activation: activation}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (s *Store) ValidateActivation(ctx context.Context, input LicenseValidationInput) (*LicenseActivationResult, error) {
+	input.ActivationTokenHash = strings.TrimSpace(input.ActivationTokenHash)
+	input.DeviceIDHash = strings.TrimSpace(input.DeviceIDHash)
+	if input.ActivationTokenHash == "" || input.DeviceIDHash == "" {
+		return nil, fmt.Errorf("%w: activation token and device id are required", ErrInvalidInput)
+	}
+	if input.Now.IsZero() {
+		input.Now = time.Now()
+	}
+
+	var activation LicenseActivation
+	err := s.db.WithContext(ctx).
+		Preload("License.Customer").
+		Preload("License.Order").
+		Preload("License.LicensePlan").
+		Where("activation_token_hash = ? AND status = ?", input.ActivationTokenHash, ActivationStatusActive).
+		First(&activation).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if activation.DeviceIDHash != input.DeviceIDHash {
+		return nil, ErrNotFound
+	}
+	if err := ensureLicenseUsable(activation.License, input.Now); err != nil {
+		return nil, err
+	}
+
+	updates := map[string]any{
+		"last_seen_at": input.Now,
+	}
+	if strings.TrimSpace(input.AppVersion) != "" {
+		updates["app_version"] = strings.TrimSpace(input.AppVersion)
+	}
+	if err := s.db.WithContext(ctx).Model(&activation).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	activation.LastSeenAt = input.Now
+	if appVersion, ok := updates["app_version"].(string); ok {
+		activation.AppVersion = appVersion
+	}
+
+	return &LicenseActivationResult{
+		License:    activation.License,
+		Activation: activation,
+	}, nil
+}
+
+func (s *Store) DeactivateActivation(ctx context.Context, input LicenseValidationInput) (*LicenseActivationResult, error) {
+	input.ActivationTokenHash = strings.TrimSpace(input.ActivationTokenHash)
+	input.DeviceIDHash = strings.TrimSpace(input.DeviceIDHash)
+	if input.ActivationTokenHash == "" || input.DeviceIDHash == "" {
+		return nil, fmt.Errorf("%w: activation token and device id are required", ErrInvalidInput)
+	}
+	if input.Now.IsZero() {
+		input.Now = time.Now()
+	}
+
+	var activation LicenseActivation
+	err := s.db.WithContext(ctx).
+		Preload("License.Customer").
+		Preload("License.Order").
+		Preload("License.LicensePlan").
+		Where("activation_token_hash = ? AND status = ?", input.ActivationTokenHash, ActivationStatusActive).
+		First(&activation).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	if activation.DeviceIDHash != input.DeviceIDHash {
+		return nil, ErrNotFound
+	}
+
+	updates := map[string]any{
+		"status":         ActivationStatusDeactivated,
+		"deactivated_at": input.Now,
+		"last_seen_at":   input.Now,
+	}
+	if err := s.db.WithContext(ctx).Model(&activation).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	activation.Status = ActivationStatusDeactivated
+	activation.DeactivatedAt = &input.Now
+	activation.LastSeenAt = input.Now
+
+	return &LicenseActivationResult{
+		License:    activation.License,
+		Activation: activation,
+	}, nil
+}
+
+func ensureLicenseUsable(license License, now time.Time) error {
+	if license.Status == LicenseStatusRevoked {
+		return ErrLicenseInactive
+	}
+	if license.Status != LicenseStatusActive {
+		return ErrLicenseInactive
+	}
+	if license.ExpiresAt != nil && !license.ExpiresAt.After(now) {
+		return ErrLicenseExpired
+	}
+	return nil
+}
+
+func ensureActivationCapacity(tx *gorm.DB, license License, excludeActivationID uint) error {
+	var activeCount int64
+	query := tx.Model(&LicenseActivation{}).
+		Where("license_id = ? AND status = ?", license.ID, ActivationStatusActive)
+	if excludeActivationID != 0 {
+		query = query.Where("id <> ?", excludeActivationID)
+	}
+	if err := query.Count(&activeCount).Error; err != nil {
+		return err
+	}
+	maxActivations := license.LicensePlan.MaxActivations
+	if maxActivations <= 0 {
+		maxActivations = 1
+	}
+	if activeCount >= int64(maxActivations) {
+		return ErrActivationLimit
+	}
+	return nil
 }
 
 func (s *Store) CreateRecoveryToken(ctx context.Context, email string, tokenHash string, expiresAt time.Time) (*RecoveryToken, error) {

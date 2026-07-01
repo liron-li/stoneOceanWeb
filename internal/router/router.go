@@ -22,6 +22,8 @@ func NewWithEvents(appStore *store.Store, eventBus *events.Bus) *gin.Engine {
 	r.Static("/static", "./web/static")
 	// 加载页面模板文件。
 	r.LoadHTMLGlob("web/templates/*")
+	// Swagger/OpenAPI 文档。
+	r.StaticFile("/swagger/openapi.yaml", "./docs/openapi.yaml")
 
 	// 默认首页，内部会跳转到默认语言首页。
 	r.GET("/", handlers.Home)
@@ -49,6 +51,12 @@ func NewWithEvents(appStore *store.Store, eventBus *events.Bus) *gin.Engine {
 	r.POST("/api/license-recovery/verification-code", api.SendLicenseRecoveryCode)
 	// 校验找回验证码；验证通过后返回该邮箱下的激活码。
 	r.POST("/api/license-recovery/verification-code/verify", api.VerifyLicenseRecoveryCode)
+	// 客户端首次激活授权码并绑定设备。
+	r.POST("/api/licenses/activate", api.ActivateLicense)
+	// 客户端校验设备授权并刷新签名授权。
+	r.POST("/api/licenses/validate", api.ValidateLicense)
+	// 客户端停用当前设备授权。
+	r.POST("/api/licenses/deactivate", api.DeactivateLicense)
 	// 搜索引擎爬虫规则文件。
 	r.GET("/robots.txt", handlers.Robots)
 	// 站点地图文件。

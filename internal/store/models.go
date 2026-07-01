@@ -7,6 +7,7 @@ type OrderStatus string
 type PaymentMethod string
 type PaymentStatus string
 type LicenseStatus string
+type ActivationStatus string
 
 const (
 	LicenseKindMonthly  LicenseKind = "monthly"
@@ -27,6 +28,9 @@ const (
 	LicenseStatusActive  LicenseStatus = "active"
 	LicenseStatusExpired LicenseStatus = "expired"
 	LicenseStatusRevoked LicenseStatus = "revoked"
+
+	ActivationStatusActive      ActivationStatus = "active"
+	ActivationStatusDeactivated ActivationStatus = "deactivated"
 )
 
 type Customer struct {
@@ -39,16 +43,17 @@ type Customer struct {
 }
 
 type LicensePlan struct {
-	ID           uint        `gorm:"primaryKey"`
-	Code         string      `gorm:"size:64;not null;uniqueIndex"`
-	Name         string      `gorm:"size:120;not null"`
-	Kind         LicenseKind `gorm:"size:32;not null;index"`
-	DurationDays *int
-	PriceCents   int64  `gorm:"not null"`
-	Currency     string `gorm:"size:8;not null;default:USD"`
-	IsActive     bool   `gorm:"not null;default:true;index"`
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID             uint        `gorm:"primaryKey"`
+	Code           string      `gorm:"size:64;not null;uniqueIndex"`
+	Name           string      `gorm:"size:120;not null"`
+	Kind           LicenseKind `gorm:"size:32;not null;index"`
+	DurationDays   *int
+	PriceCents     int64  `gorm:"not null"`
+	Currency       string `gorm:"size:8;not null;default:USD"`
+	MaxActivations int    `gorm:"not null;default:2"`
+	IsActive       bool   `gorm:"not null;default:true;index"`
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type Order struct {
@@ -113,4 +118,21 @@ type RecoveryToken struct {
 	UsedAt          *time.Time `gorm:"index"`
 	CreatedAt       time.Time
 	UpdatedAt       time.Time
+}
+
+type LicenseActivation struct {
+	ID                  uint             `gorm:"primaryKey"`
+	LicenseID           uint             `gorm:"not null;index;uniqueIndex:idx_license_device"`
+	License             License          `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	DeviceIDHash        string           `gorm:"size:128;not null;uniqueIndex:idx_license_device;index"`
+	DeviceName          string           `gorm:"size:160"`
+	Platform            string           `gorm:"size:64;index"`
+	AppVersion          string           `gorm:"size:64"`
+	Status              ActivationStatus `gorm:"size:32;not null;index"`
+	ActivationTokenHash string           `gorm:"size:128;not null;uniqueIndex"`
+	ActivatedAt         time.Time        `gorm:"not null;index"`
+	LastSeenAt          time.Time        `gorm:"not null;index"`
+	DeactivatedAt       *time.Time       `gorm:"index"`
+	CreatedAt           time.Time
+	UpdatedAt           time.Time
 }

@@ -50,6 +50,8 @@ DB_LOC=Local
 DB_AUTO_MIGRATE=true
 DB_SEED_PLANS=true
 DB_SEED_DEMO_DATA=false
+
+LICENSE_SIGNING_PRIVATE_KEY=base64-ed25519-seed-or-private-key
 ```
 
 说明：
@@ -59,6 +61,13 @@ DB_SEED_DEMO_DATA=false
 - `DB_AUTO_MIGRATE`：启动时是否自动执行 GORM 迁移。
 - `DB_SEED_PLANS`：是否写入默认授权套餐。
 - `DB_SEED_DEMO_DATA`：是否写入演示购买数据，生产环境建议保持 `false`。
+- `LICENSE_SIGNING_PRIVATE_KEY`：客户端授权接口使用的 Ed25519 私钥，填写 base64 编码的 32 字节 seed 或 64 字节 private key。未配置时，激活/校验接口会返回服务不可用。
+
+Swagger/OpenAPI 文档：
+
+```text
+http://localhost:8080/swagger/openapi.yaml
+```
 
 真实 `.env` 已被 `.gitignore` 忽略，不应提交到仓库。
 

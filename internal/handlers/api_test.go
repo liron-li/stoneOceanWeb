@@ -3,9 +3,11 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -138,6 +140,88 @@ func TestLicenseRecoveryVerifyRateLimitsFailedAttemptsByIP(t *testing.T) {
 	if response["error"] == "" {
 		t.Fatal("rate limited response returned empty error")
 	}
+}
+
+func TestLicenseActivationAPI(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	appStore := newAPITestStore(t)
+	checkout, err := appStore.CreateCheckoutOrder(context.Background(), store.CreateCheckoutOrderInput{
+		Email:         "client@example.com",
+		PlanCode:      store.DefaultLifetimePlanCode,
+		PaymentMethod: store.PaymentMethodCard,
+	})
+	if err != nil {
+		t.Fatalf("CreateCheckoutOrder() error = %v", err)
+	}
+	if _, err := appStore.MarkPaymentPaid(context.Background(), checkout.Payment.PaymentNo, "provider-client", time.Now()); err != nil {
+		t.Fatalf("MarkPaymentPaid() error = %v", err)
+	}
+	licenses, err := appStore.FindLicensesByEmail(context.Background(), "client@example.com")
+	if err != nil {
+		t.Fatalf("FindLicensesByEmail() error = %v", err)
+	}
+	if len(licenses) != 1 {
+		t.Fatalf("licenses length = %d, want 1", len(licenses))
+	}
+
+	api := NewAPIWithEvents(appStore, nil)
+	api.licenseSigner = testLicenseSigner()
+	router := gin.New()
+	router.POST("/api/licenses/activate", api.ActivateLicense)
+	router.POST("/api/licenses/validate", api.ValidateLicense)
+	router.POST("/api/licenses/deactivate", api.DeactivateLicense)
+
+	activateResponse := postJSONForTest(t, router, "/api/licenses/activate", map[string]string{
+		"licenseKey": licenses[0].LicenseKey,
+		"deviceId":   "device-001",
+		"deviceName": "Windows PC",
+		"platform":   "windows",
+		"appVersion": "1.0.0",
+	})
+	activationToken, ok := activateResponse["activationToken"].(string)
+	if !ok || activationToken == "" {
+		t.Fatalf("activationToken = %#v, want non-empty string", activateResponse["activationToken"])
+	}
+	if signed, ok := activateResponse["signedEntitlement"].(string); !ok || !strings.Contains(signed, ".") {
+		t.Fatalf("signedEntitlement = %#v, want signed payload", activateResponse["signedEntitlement"])
+	}
+	if activateResponse["signatureAlgorithm"] != "Ed25519" {
+		t.Fatalf("signatureAlgorithm = %#v, want Ed25519", activateResponse["signatureAlgorithm"])
+	}
+
+	validateResponse := postJSONForTest(t, router, "/api/licenses/validate", map[string]string{
+		"activationToken": activationToken,
+		"deviceId":        "device-001",
+		"appVersion":      "1.0.1",
+	})
+	if _, ok := validateResponse["activationToken"]; ok {
+		t.Fatal("validate response returned a new activationToken")
+	}
+	if signed, ok := validateResponse["signedEntitlement"].(string); !ok || !strings.Contains(signed, ".") {
+		t.Fatalf("validate signedEntitlement = %#v, want signed payload", validateResponse["signedEntitlement"])
+	}
+
+	deactivateResponse := postJSONForTest(t, router, "/api/licenses/deactivate", map[string]string{
+		"activationToken": activationToken,
+		"deviceId":        "device-001",
+	})
+	if deactivateResponse["status"] != string(store.ActivationStatusDeactivated) {
+		t.Fatalf("deactivate status = %#v, want %q", deactivateResponse["status"], store.ActivationStatusDeactivated)
+	}
+
+	postJSONWithStatusForTest(t, router, "/api/licenses/validate", map[string]string{
+		"activationToken": activationToken,
+		"deviceId":        "device-001",
+	}, http.StatusNotFound)
+}
+
+func testLicenseSigner() *licenseSigner {
+	seed := make([]byte, ed25519.SeedSize)
+	for i := range seed {
+		seed[i] = byte(i + 1)
+	}
+	return newLicenseSigner(ed25519.NewKeyFromSeed(seed))
 }
 
 func postJSONForTest(t *testing.T, handler http.Handler, path string, body any) map[string]any {

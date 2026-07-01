@@ -1,0 +1,569 @@
+openapi: 3.0.3
+info:
+  title: RecoverEase Web API
+  version: 1.0.0
+  description: >
+    Checkout, license recovery, and client license activation APIs for RecoverEase.
+    Client applications must use HTTPS with normal certificate verification and verify
+    signedEntitlement using the RecoverEase public signing key.
+servers:
+  - url: https://api.recoverease.com
+    description: Production API
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: Checkout
+  - name: License Recovery
+  - name: Client Licensing
+paths:
+  /api/checkout:
+    post:
+      tags: [Checkout]
+      summary: Create a checkout order
+      operationId: createCheckout
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: Checkout order created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/payments/{paymentNo}/confirm:
+    post:
+      tags: [Checkout]
+      summary: Confirm a test payment
+      description: Development/demo endpoint that marks a payment as paid and generates a license.
+      operationId: confirmPayment
+      parameters:
+        - $ref: '#/components/parameters/PaymentNo'
+      responses:
+        '200':
+          description: Payment confirmed and license returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [license]
+                properties:
+                  license:
+                    $ref: '#/components/schemas/License'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/payments/{paymentNo}/result:
+    get:
+      tags: [Checkout]
+      summary: Get payment result
+      operationId: getPaymentResult
+      parameters:
+        - $ref: '#/components/parameters/PaymentNo'
+      responses:
+        '200':
+          description: Payment result. The license field appears only after successful payment.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResult'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/license-recovery/verification-code:
+    post:
+      tags: [License Recovery]
+      summary: Send a license recovery verification code
+      operationId: sendLicenseRecoveryCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryCodeRequest'
+      responses:
+        '200':
+          description: Generic success response. Does not reveal whether the email has purchases.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok]
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/license-recovery/verification-code/verify:
+    post:
+      tags: [License Recovery]
+      summary: Verify a recovery code and return licenses for the purchase email
+      operationId: verifyLicenseRecoveryCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecoveryVerifyRequest'
+      responses:
+        '200':
+          description: Verification succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [licenses]
+                properties:
+                  licenses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/License'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/licenses/activate:
+    post:
+      tags: [Client Licensing]
+      summary: Activate a license key for a client device
+      description: >
+        First-time client activation endpoint. The raw license key is used only here.
+        The response returns activationToken once; clients should store it securely
+        and use it for future validation. The signedEntitlement must be verified by
+        the client with the RecoverEase public Ed25519 key.
+      operationId: activateLicense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LicenseActivateRequest'
+      responses:
+        '200':
+          description: License activated for this device.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseActivationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Activation limit reached.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/licenses/validate:
+    post:
+      tags: [Client Licensing]
+      summary: Validate an activated client device
+      description: >
+        Online validation endpoint for an already activated client. It refreshes
+        lastSeenAt and returns a newly signed entitlement. The activationToken is
+        not rotated by this endpoint.
+      operationId: validateLicense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LicenseValidateRequest'
+      responses:
+        '200':
+          description: Activation is valid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LicenseValidationResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /api/licenses/deactivate:
+    post:
+      tags: [Client Licensing]
+      summary: Deactivate the current client device
+      description: Deactivates one device activation and frees one activation slot.
+      operationId: deactivateLicense
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LicenseValidateRequest'
+      responses:
+        '200':
+          description: Device activation deactivated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, license, activation]
+                properties:
+                  status:
+                    type: string
+                    enum: [deactivated]
+                  license:
+                    $ref: '#/components/schemas/LicenseStatus'
+                  activation:
+                    $ref: '#/components/schemas/Activation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+components:
+  parameters:
+    PaymentNo:
+      name: paymentNo
+      in: path
+      required: true
+      schema:
+        type: string
+      example: PAY-20260626-ABC123
+  responses:
+    BadRequest:
+      description: Invalid request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: License inactive, expired, or not allowed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Record not found.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TooManyRequests:
+      description: Too many failed verification attempts.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServiceUnavailable:
+      description: Database or license signing key is not configured.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+    CheckoutRequest:
+      type: object
+      required: [email, license, paymentMethod]
+      properties:
+        email:
+          type: string
+          format: email
+        license:
+          type: string
+          enum: [monthly, lifetime]
+        paymentMethod:
+          type: string
+          enum: [usdt, card]
+        locale:
+          type: string
+          example: zh
+    CheckoutResponse:
+      type: object
+      required: [orderNo, paymentNo, amountCents, currency, status, paymentMethod, paymentUrl]
+      properties:
+        orderNo:
+          type: string
+        paymentNo:
+          type: string
+        amountCents:
+          type: integer
+          example: 2900
+        currency:
+          type: string
+          example: USD
+        status:
+          type: string
+          enum: [pending, paid, canceled, refunded]
+        paymentMethod:
+          type: string
+          enum: [usdt, card]
+        paymentUrl:
+          type: string
+    RecoveryCodeRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        locale:
+          type: string
+          example: zh
+    RecoveryVerifyRequest:
+      type: object
+      required: [email, code]
+      properties:
+        email:
+          type: string
+          format: email
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+          example: '123456'
+    PaymentResult:
+      type: object
+      required: [paymentNo, orderNo, status, amountCents, currency, paymentMethod]
+      properties:
+        paymentNo:
+          type: string
+        orderNo:
+          type: string
+        status:
+          type: string
+          enum: [pending, paid, failed]
+        amountCents:
+          type: integer
+        currency:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [usdt, card]
+        paidAt:
+          type: string
+          format: date-time
+        license:
+          $ref: '#/components/schemas/License'
+    License:
+      allOf:
+        - $ref: '#/components/schemas/LicenseStatus'
+        - type: object
+          required: [licenseKey]
+          properties:
+            licenseKey:
+              type: string
+              example: RE-ABCD-1234
+    LicenseStatus:
+      type: object
+      required: [status, kind, plan, planCode, orderNo, issuedAt, maxActivations]
+      properties:
+        status:
+          type: string
+          enum: [active, expired, revoked]
+        kind:
+          type: string
+          enum: [monthly, lifetime]
+        plan:
+          type: string
+        planCode:
+          type: string
+        orderNo:
+          type: string
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        maxActivations:
+          type: integer
+          example: 2
+    LicenseActivateRequest:
+      type: object
+      required: [licenseKey, deviceId]
+      properties:
+        licenseKey:
+          type: string
+        deviceId:
+          type: string
+          description: Stable client-generated device identifier. The server stores only a hash.
+        deviceName:
+          type: string
+          example: Windows PC
+        platform:
+          type: string
+          example: windows
+        appVersion:
+          type: string
+          example: 1.0.0
+    LicenseValidateRequest:
+      type: object
+      required: [activationToken, deviceId]
+      properties:
+        activationToken:
+          type: string
+          description: Token returned once by /api/licenses/activate.
+        deviceId:
+          type: string
+          description: Same stable client-generated device identifier used during activation.
+        appVersion:
+          type: string
+          example: 1.0.1
+    LicenseActivationResponse:
+      allOf:
+        - $ref: '#/components/schemas/LicenseValidationResponse'
+        - type: object
+          required: [activationToken]
+          properties:
+            activationToken:
+              type: string
+              description: Returned only during activation. Store securely on the client.
+    LicenseValidationResponse:
+      type: object
+      required:
+        - status
+        - license
+        - activation
+        - entitlement
+        - signedEntitlement
+        - nextCheckAt
+        - offlineGraceUntil
+        - signingKeyID
+        - signatureAlgorithm
+      properties:
+        status:
+          type: string
+          enum: [active]
+        license:
+          $ref: '#/components/schemas/LicenseStatus'
+        activation:
+          $ref: '#/components/schemas/Activation'
+        entitlement:
+          $ref: '#/components/schemas/Entitlement'
+        signedEntitlement:
+          type: string
+          description: base64url(JSON entitlement) + "." + base64url(Ed25519 signature).
+        nextCheckAt:
+          type: string
+          format: date-time
+        offlineGraceUntil:
+          type: string
+          format: date-time
+        signingKeyID:
+          type: string
+        signatureAlgorithm:
+          type: string
+          enum: [Ed25519]
+    Activation:
+      type: object
+      required: [id, status, deviceIDHash, activatedAt, lastSeenAt]
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [active, deactivated]
+        deviceIDHash:
+          type: string
+        deviceName:
+          type: string
+        platform:
+          type: string
+        appVersion:
+          type: string
+        activatedAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        deactivatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    Entitlement:
+      type: object
+      required:
+        - schema
+        - licenseId
+        - activationId
+        - deviceIdHash
+        - status
+        - planCode
+        - planName
+        - kind
+        - features
+        - maxActivations
+        - issuedAt
+        - entitlementIssuedAt
+        - nextCheckAt
+        - offlineGraceUntil
+      properties:
+        schema:
+          type: string
+          example: recoverease-license-v1
+        licenseId:
+          type: integer
+        activationId:
+          type: integer
+        deviceIdHash:
+          type: string
+        status:
+          type: string
+          enum: [active, expired, revoked]
+        planCode:
+          type: string
+        planName:
+          type: string
+        kind:
+          type: string
+          enum: [monthly, lifetime]
+        features:
+          type: array
+          items:
+            type: string
+        maxActivations:
+          type: integer
+        issuedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+          nullable: true
+        entitlementIssuedAt:
+          type: string
+          format: date-time
+        nextCheckAt:
+          type: string
+          format: date-time
+        offlineGraceUntil:
+          type: string
+          format: date-time
+        signingKeyId:
+          type: string
