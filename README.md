@@ -69,6 +69,12 @@ Swagger/OpenAPI 文档：
 http://localhost:8080/swagger/openapi.yaml
 ```
 
+也可以使用 Swagger Editor 在线查看和调试 OpenAPI 文档：
+
+```text
+https://editor.swagger.io/
+```
+
 真实 `.env` 已被 `.gitignore` 忽略，不应提交到仓库。
 
 ## 数据库初始化
